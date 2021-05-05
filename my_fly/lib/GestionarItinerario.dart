@@ -1,30 +1,29 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 //import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:flutter_rounded_date_picker/flutter_rounded_date_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 
-class GestionarItinerario extends StatelessWidget {
+/*class GestionarItinerario extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return Page(title: 'Gestionar Itinerario');
+    return Page();
   }
-}
+}*/
 
-class Page extends StatefulWidget {
-  final String title;
-
-  Page({Key key, this.title}) : super(key: key);
-
+class GestionarItinerario extends StatefulWidget {
   @override
   _CState createState() => _CState();
 }
 
-class _CState extends State<Page> {
-  
+class _CState extends State<GestionarItinerario> {
   List<String> lista = ["España", "Francia"];
   List<String> aeropuertos = ['Aero_uno', 'Aero_dos'];
+  List<String> paices = [];
 
   String valorOrigen = "Origen";
   String aeropuerto = "Aeropuerto";
@@ -34,10 +33,44 @@ class _CState extends State<Page> {
   String fechaLlegada = "";
   String horaLlegada = "";
 
+  void transformarJson(List<dynamic> lista) {
+    List<String> pais = [];
+
+    for (int i = 0; i < lista.length; i++) {
+      this.paices.add(lista[i]['nombre'].toString());
+      //print(lista[i]['nombre']);
+      pais.add(lista[i]['nombre'].toString());
+    }
+
+    print("el dato es: ${this.paices}");
+    setState(() {            
+    });
+  }
+
+  Future traerPaices() async {
+    var h = http.Client();
+
+    final response =
+        await h.get(Uri.parse('http://192.168.1.12/restful_php/'), headers: {
+      "Accept": "application/json",
+      //"Access-Control-Allow-Origin": "*"
+    });
+
+    List<dynamic> data = json.decode(response.body);
+    print("el dato fue : ${data[0]['nombre']}");
+    transformarJson(data);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    traerPaices();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: Text(widget.title)),
+        appBar: AppBar(title: Text('Gestionar Itinerario')),
         body: SingleChildScrollView(
           child: Column(
             children: [
@@ -60,7 +93,7 @@ class _CState extends State<Page> {
                         style: CupertinoTheme.of(context)
                             .textTheme
                             .pickerTextStyle),
-                  ),                  
+                  ),
                   SizedBox(height: 30.0),
                   Container(
                     padding: EdgeInsets.all(30.0),
@@ -73,7 +106,8 @@ class _CState extends State<Page> {
                   Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Container(
+                        if (paices.length > 0)
+                          Container(
                           width: 190.00,
                           height: 40.0,
                           child: DropdownButton(
@@ -88,12 +122,14 @@ class _CState extends State<Page> {
                                 valorOrigen = value;
                               });
                             },
-                            items: lista
+                            items: paices
                                 .map((e) =>
                                     DropdownMenuItem(value: e, child: Text(e)))
                                 .toList(),
                           ),
-                        ),
+                        )
+                        else 
+                          CircularProgressIndicator(),
                         CupertinoButton(
                             child: Text("Seleccionar fecha"),
                             onPressed: () {
@@ -112,11 +148,10 @@ class _CState extends State<Page> {
                             },
                             color: Colors.deepPurple),
                         Container(
-                          width: 130.0,
-                          height: 45.0,                          
-                          child: Center(child: Text('$fechaSalida')))
-                      ]
-                  ),
+                            width: 130.0,
+                            height: 45.0,
+                            child: Center(child: Text('$fechaSalida')))
+                      ]),
                   SizedBox(
                     height: 30.0,
                   ),
@@ -145,31 +180,29 @@ class _CState extends State<Page> {
                           ),
                         ),
                         CupertinoButton(
-                          onPressed: () {
-                            CupertinoRoundedDatePicker.show(context,                              
-                              textColor: Colors.black,
-                              background: Colors.white,
-                              borderRadius: 30,
-                              initialDatePickerMode: CupertinoDatePickerMode.time,
-                              onDateTimeChanged: (newDate) {
+                            onPressed: () {
+                              CupertinoRoundedDatePicker.show(context,
+                                  textColor: Colors.black,
+                                  background: Colors.white,
+                                  borderRadius: 30,
+                                  initialDatePickerMode: CupertinoDatePickerMode
+                                      .time, onDateTimeChanged: (newDate) {
                                 setState(() {
-                                  horaSalida = DateFormat('hh:mm a').format(newDate);
+                                  horaSalida =
+                                      DateFormat('hh:mm a').format(newDate);
                                 });
-                              }
-                            );
-                          },
-                          color: Colors.blue,
-                          child: Text('Seleccionar hora')
-                        ),
+                              });
+                            },
+                            color: Colors.blue,
+                            child: Text('Seleccionar hora')),
                         Container(
-                          width: 130.0,
-                          height: 45.0,                          
-                          child: Center(child: Text('$horaSalida')))                        
-                      ]
-                  ),
+                            width: 130.0,
+                            height: 45.0,
+                            child: Center(child: Text('$horaSalida')))
+                      ]),
                   SizedBox(
                     height: 90.0,
-                  ),                                    
+                  ),
                   Container(
                     padding: EdgeInsets.all(30.0),
                     margin: EdgeInsets.only(right: 260.0),
@@ -181,7 +214,8 @@ class _CState extends State<Page> {
                   Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Container(
+                        if (paices.length > 0)
+                          Container(
                           width: 190.00,
                           height: 40.0,
                           child: DropdownButton(
@@ -196,12 +230,14 @@ class _CState extends State<Page> {
                                 valorDestino = value;
                               });
                             },
-                            items: lista
+                            items: paices
                                 .map((e) =>
                                     DropdownMenuItem(value: e, child: Text(e)))
                                 .toList(),
                           ),
-                        ),
+                        )
+                        else
+                          CircularProgressIndicator(), 
                         CupertinoButton(
                             child: Text("Seleccionar fecha"),
                             onPressed: () {
@@ -218,15 +254,12 @@ class _CState extends State<Page> {
                                 });
                               });
                             },
-                            color: Colors.deepPurple
-                        ),
+                            color: Colors.deepPurple),
                         Container(
-                          width: 130.0,
-                          height: 45.0,                          
-                          child: Center(child: Text('$fechaLlegada'))
-                        )
-                      ]
-                  ),
+                            width: 130.0,
+                            height: 45.0,
+                            child: Center(child: Text('$fechaLlegada')))
+                      ]),
                   SizedBox(
                     height: 30.0,
                   ),
@@ -255,31 +288,27 @@ class _CState extends State<Page> {
                           ),
                         ),
                         CupertinoButton(
-                          onPressed: () {
-                            CupertinoRoundedDatePicker.show(context,                              
-                              textColor: Colors.black,
-                              background: Colors.white,
-                              borderRadius: 30,
-                              initialDatePickerMode: CupertinoDatePickerMode.time,
-                              onDateTimeChanged: (newDate) {
+                            onPressed: () {
+                              CupertinoRoundedDatePicker.show(context,
+                                  textColor: Colors.black,
+                                  background: Colors.white,
+                                  borderRadius: 30,
+                                  initialDatePickerMode: CupertinoDatePickerMode
+                                      .time, onDateTimeChanged: (newDate) {
                                 setState(() {
-                                  horaLlegada = DateFormat('hh:mm a').format(newDate);
+                                  horaLlegada =
+                                      DateFormat('hh:mm a').format(newDate);
                                 });
-                              }
-                            );
-                          },
-                          color: Colors.blue,
-                          child: Text('Seleccionar hora')
-                        ),
+                              });
+                            },
+                            color: Colors.blue,
+                            child: Text('Seleccionar hora')),
                         Container(
-                          width: 130.0,
-                          height: 45.0,                          
-                          child: Center(child: Text('$horaLlegada')))
-                      ]
-                  ),
-                  SizedBox(
-                    height: 60.0
-                  ),
+                            width: 130.0,
+                            height: 45.0,
+                            child: Center(child: Text('$horaLlegada')))
+                      ]),
+                  SizedBox(height: 60.0),
                   Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -293,63 +322,42 @@ class _CState extends State<Page> {
                           child: Text('Editar'),
                           onPressed: () {},
                         )
-                      ])]
-                ),
+                      ])
+                ]),
               ),
               Container(
-                width: double.maxFinite,
-                height: 50.0,                
-                child: Center(
-                  child: DataTable(
-                    sortColumnIndex: 0,
-                    sortAscending: true,
-                    columns: [
-                      DataColumn(
-                        label: Text('id')
-                      ),
-                      DataColumn(
-                        label: Text('Origen')
-                      ),
-                      DataColumn(
-                        label: Text('Aeropuerto')
-                      ),
-                      DataColumn(
-                        label: Text('Fecha salida')
-                      ),
-                      DataColumn(
-                        label: Text('Hora salida')
-                      ),
-                      DataColumn(
-                        label: Text('Destino')
-                      ),
-                      DataColumn(
-                        label: Text('Aeropuerto')
-                      ),
-                      DataColumn(
-                        label: Text('Fecha salida')
-                      ),
-                      DataColumn(
-                        label: Text('Hora salida')
-                      ),
-                    ], 
-                    rows: [
-                      DataRow(cells: [
-                        DataCell(Text('1')),
-                        DataCell(Text('España')),
-                        DataCell(Text('EROPAR')),
-                        DataCell(Text('27/09/2000')),
-                        DataCell(Text('01:22 PM')),
-                        DataCell(Text('francia')),
-                        DataCell(Text('only')),
-                        DataCell(Text('29/09/2020')),
-                        DataCell(Text('11:32 PM')),                      
-                      ])
-                    ]),
-                )
-              ),
-              SizedBox(
-                    height: 60.0
-              )
+                  width: double.maxFinite,
+                  height: 50.0,
+                  child: Center(
+                    child: DataTable(
+                        sortColumnIndex: 0,
+                        sortAscending: true,
+                        columns: [
+                          DataColumn(label: Text('id')),
+                          DataColumn(label: Text('Origen')),
+                          DataColumn(label: Text('Aeropuerto')),
+                          DataColumn(label: Text('Fecha salida')),
+                          DataColumn(label: Text('Hora salida')),
+                          DataColumn(label: Text('Destino')),
+                          DataColumn(label: Text('Aeropuerto')),
+                          DataColumn(label: Text('Fecha salida')),
+                          DataColumn(label: Text('Hora salida')),
+                        ],
+                        rows: [
+                          DataRow(cells: [
+                            DataCell(Text('1')),
+                            DataCell(Text('España')),
+                            DataCell(Text('EROPAR')),
+                            DataCell(Text('27/09/2000')),
+                            DataCell(Text('01:22 PM')),
+                            DataCell(Text('francia')),
+                            DataCell(Text('only')),
+                            DataCell(Text('29/09/2020')),
+                            DataCell(Text('11:32 PM')),
+                          ])
+                        ]),
+                  )),
+              SizedBox(height: 60.0)
             ],
           ),
         ));

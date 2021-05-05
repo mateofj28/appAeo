@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'model/ParseJson.dart';
+//import 'model/ParseJson.dart';
 
 class GestionarVuelo extends StatelessWidget {
   @override
