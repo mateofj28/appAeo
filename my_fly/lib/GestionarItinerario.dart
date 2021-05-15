@@ -51,7 +51,7 @@ class _CState extends State<GestionarItinerario> {
     var h = http.Client();
 
     final response =
-        await h.get(Uri.parse('http://192.168.1.12/restful_php/'), headers: {
+        await h.get(Uri.parse('http://localhost:1000/personas'), headers: {
       "Accept": "application/json",
       //"Access-Control-Allow-Origin": "*"
     });
