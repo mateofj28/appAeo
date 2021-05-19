@@ -2,18 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-//import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:flutter_rounded_date_picker/flutter_rounded_date_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
-/*class GestionarItinerario extends StatelessWidget {
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return Page();
-  }
-}*/
+import 'model/Itinerario.dart';
 
 class GestionarItinerario extends StatefulWidget {
   @override
@@ -21,50 +14,92 @@ class GestionarItinerario extends StatefulWidget {
 }
 
 class _CState extends State<GestionarItinerario> {
-  List<String> lista = ["España", "Francia"];
-  List<String> aeropuertos = ['Aero_uno', 'Aero_dos'];
-  List<String> paices = [];
+  List<String> ciudades = [];
+  List<dynamic> dataCiudades = [];
+  List<dynamic> dataPuertoSalida = [], dataPuertoLlegada = [];
+  List<String> arrayPuertoSalida = [], arrayPuertoLlegada = [];
+  List<String> aeropuertos = [];
 
-  String valorOrigen = "Origen";
-  String aeropuerto = "Aeropuerto";
-  String valorDestino = "Destino";
-  String fechaSalida = "";
+  Itinerario itinerario;
+  int idPuertoLlegada, idPuertoSalida;
+  String valorOrigen = "Selecionar Origen", valorDestino = "Selecionar Destino";
+  String puertoSalida = "Seleccionar aeropuerto",
+      puertoLlegada = "Seleccionar aeropuerto";
+  String fechaSalida = "", fechaLlegada = "";
   String horaSalida = "";
-  String fechaLlegada = "";
   String horaLlegada = "";
 
-  void transformarJson(List<dynamic> lista) {
-    List<String> pais = [];
-
+  void transformarJson(List<dynamic> lista, int id) {
+    List<String> listaRellenar = [];
     for (int i = 0; i < lista.length; i++) {
-      this.paices.add(lista[i]['nombre'].toString());
-      //print(lista[i]['nombre']);
-      pais.add(lista[i]['nombre'].toString());
+      listaRellenar.add(lista[i]['nombre'].toString());
     }
 
-    print("el dato es: ${this.paices}");
-    setState(() {            
-    });
+    print("el objeto es: ${listaRellenar}");
+
+    if (id == 1) {
+      arrayPuertoLlegada = listaRellenar;
+    }
+
+    if (id == 2) {
+      ciudades = listaRellenar;
+    }
+
+    //aca estan los puertos que se usan en el drop
+    arrayPuertoSalida = listaRellenar;
+    setState(() {});
   }
 
-  Future traerPaices() async {
+  int getIdObject(String value, List<dynamic> lista) {
+    int id;
+    for (int i = 0; i < lista.length; i++) {
+      if (lista[i]['nombre'] == value) {
+        id = lista[i]['id'];
+      }
+    }
+    return id;
+  }
+
+  Future getDataAero(int id, int key) async {
     var h = http.Client();
 
-    final response =
-        await h.get(Uri.parse('http://localhost:1000/personas'), headers: {
-      "Accept": "application/json",
-      //"Access-Control-Allow-Origin": "*"
-    });
+    final response = await h.get(
+        Uri.parse('http://localhost:8080/api/aeropuerto?id=$id'),
+        headers: {
+          "Accept": "application/json",
+          //"Access-Control-Allow-Origin": "*"
+        });
 
     List<dynamic> data = json.decode(response.body);
-    print("el dato fue : ${data[0]['nombre']}");
-    transformarJson(data);
+    print("el aeropuerto fue: ${data[0]['id']}, ${data[0]['nombre']}");
+    
+    if (key == 1) {
+      dataPuertoLlegada = data;
+      print("el puerto fue: -> $dataPuertoLlegada");
+    }
+
+    dataPuertoSalida = data;
+    /*se transforma la info en objeto y se agregan a la lista de puertos
+    salida como llegada*/
+    transformarJson(data, key);
+  }
+
+  Future getDataCity(String url) async {
+    var h = http.Client();
+    final response = await h.get(Uri.parse(url), headers: {
+      "Accept": "application/json",
+    });
+    List<dynamic> data = json.decode(response.body);
+    dataCiudades = data;
+    print("las ciudades obtenidas fueron: ${dataCiudades}");
+    transformarJson(data, 2);
   }
 
   @override
   void initState() {
     super.initState();
-    traerPaices();
+    //obtener las ciudades
+    getDataCity('http://localhost:8080/api/ciudad');
   }
 
   @override
@@ -106,33 +141,39 @@ class _CState extends State<GestionarItinerario> {
                   Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        if (paices.length > 0)
+                        if (ciudades.length > 0)
                           Container(
-                          width: 190.00,
-                          height: 40.0,
-                          child: DropdownButton(
-                            hint: Text('$valorOrigen'),
-                            dropdownColor: Colors.white,
-                            elevation: 5,
-                            isExpanded: true,
-                            icon: Icon(Icons.arrow_drop_down),
-                            iconSize: 36.0,
-                            onChanged: (value) {
-                              setState(() {
-                                valorOrigen = value;
-                              });
-                            },
-                            items: paices
-                                .map((e) =>
-                                    DropdownMenuItem(value: e, child: Text(e)))
-                                .toList(),
-                          ),
-                        )
-                        else 
+                            width: 270.00,
+                            height: 40.0,
+                            child: DropdownButton(
+                              hint: Text('$valorOrigen'),
+                              dropdownColor: Colors.white,
+                              elevation: 5,
+                              isExpanded: true,
+                              icon: Icon(Icons.arrow_drop_down),
+                              iconSize: 36.0,
+                              onChanged: (value) {
+                                setState(() {
+                                  valorOrigen = value;
+                                  puertoSalida = "Seleccionar Aeropuerto";
+                                  //traer el id de la ciudad
+                                  int id = getIdObject(value, dataCiudades);
+                                  //a partir del id ciudad se trae el aeropuerto
+                                  getDataAero(id, 0);
+                                });
+                              },
+                              items: ciudades
+                                  .map((e) => DropdownMenuItem(
+                                      value: e, child: Text(e)))
+                                  .toList(),
+                            ),
+                          )
+                        else
                           CircularProgressIndicator(),
                         CupertinoButton(
                             child: Text("Seleccionar fecha"),
                             onPressed: () {
+                              //widget fecha salida
                               CupertinoRoundedDatePicker.show(context,
                                   fontFamily: "Mali",
                                   textColor: Colors.black,
@@ -142,7 +183,7 @@ class _CState extends State<GestionarItinerario> {
                                       .date, onDateTimeChanged: (newDate) {
                                 setState(() {
                                   fechaSalida =
-                                      DateFormat('EEE, M/d/y').format(newDate);
+                                      DateFormat('y-MM-d').format(newDate);
                                 });
                               });
                             },
@@ -159,10 +200,10 @@ class _CState extends State<GestionarItinerario> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Container(
-                          width: 190.00,
-                          height: 40.0,
+                          width: 270.00,
+                          height: 55.0,
                           child: DropdownButton(
-                            hint: Text('$aeropuerto'),
+                            hint: Text('$puertoSalida'),
                             dropdownColor: Colors.white,
                             elevation: 5,
                             isExpanded: true,
@@ -170,10 +211,15 @@ class _CState extends State<GestionarItinerario> {
                             iconSize: 36.0,
                             onChanged: (value) {
                               setState(() {
-                                aeropuerto = value;
+                                puertoSalida = value;
+
+                                idPuertoSalida =
+                                    getIdObject(value, dataPuertoSalida);
+                                print(
+                                    "el aeropuerto de salida es $idPuertoSalida");
                               });
                             },
-                            items: aeropuertos
+                            items: arrayPuertoSalida
                                 .map((e) =>
                                     DropdownMenuItem(value: e, child: Text(e)))
                                 .toList(),
@@ -214,30 +260,33 @@ class _CState extends State<GestionarItinerario> {
                   Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        if (paices.length > 0)
+                        if (ciudades.length > 0)
                           Container(
-                          width: 190.00,
-                          height: 40.0,
-                          child: DropdownButton(
-                            hint: Text('$valorDestino'),
-                            dropdownColor: Colors.white,
-                            elevation: 5,
-                            isExpanded: true,
-                            icon: Icon(Icons.arrow_drop_down),
-                            iconSize: 36.0,
-                            onChanged: (value) {
-                              setState(() {
-                                valorDestino = value;
-                              });
-                            },
-                            items: paices
-                                .map((e) =>
-                                    DropdownMenuItem(value: e, child: Text(e)))
-                                .toList(),
-                          ),
-                        )
+                            width: 270.00,
+                            height: 40.0,
+                            child: DropdownButton(
+                              hint: Text('$valorDestino'),
+                              dropdownColor: Colors.white,
+                              elevation: 5,
+                              isExpanded: true,
+                              icon: Icon(Icons.arrow_drop_down),
+                              iconSize: 36.0,
+                              onChanged: (value) {
+                                setState(() {
+                                  valorDestino = value;
+                                  puertoLlegada = "Seleccionar Aeropuerto";
+                                  getDataAero(
+                                      getIdObject(value, dataCiudades), 1);
+                                });
+                              },
+                              items: ciudades
+                                  .map((e) => DropdownMenuItem(
+                                      value: e, child: Text(e)))
+                                  .toList(),
+                            ),
+                          )
                         else
-                          CircularProgressIndicator(), 
+                          CircularProgressIndicator(),
                         CupertinoButton(
                             child: Text("Seleccionar fecha"),
                             onPressed: () {
@@ -250,7 +299,7 @@ class _CState extends State<GestionarItinerario> {
                                       .date, onDateTimeChanged: (newDate) {
                                 setState(() {
                                   fechaLlegada =
-                                      DateFormat('EEE, M/d/y').format(newDate);
+                                      DateFormat('y-MM-d').format(newDate);
                                 });
                               });
                             },
@@ -267,10 +316,10 @@ class _CState extends State<GestionarItinerario> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Container(
-                          width: 190.00,
-                          height: 40.0,
+                          width: 270.00,
+                          height: 55.0,
                           child: DropdownButton(
-                            hint: Text('$aeropuerto'),
+                            hint: Text('$puertoLlegada'),
                             dropdownColor: Colors.white,
                             elevation: 5,
                             isExpanded: true,
@@ -278,10 +327,14 @@ class _CState extends State<GestionarItinerario> {
                             iconSize: 36.0,
                             onChanged: (value) {
                               setState(() {
-                                aeropuerto = value;
+                                puertoLlegada = value;
+                                idPuertoLlegada =
+                                    getIdObject(value, dataPuertoLlegada);
+                                print(
+                                    "el aeropuerto de llegada es $idPuertoLlegada");
                               });
                             },
-                            items: aeropuertos
+                            items: arrayPuertoLlegada
                                 .map((e) =>
                                     DropdownMenuItem(value: e, child: Text(e)))
                                 .toList(),
@@ -315,7 +368,20 @@ class _CState extends State<GestionarItinerario> {
                         CupertinoButton(
                           color: Colors.lime,
                           child: Text('Registrar'),
-                          onPressed: () {},
+                          onPressed: () {
+                            itinerario = new Itinerario(
+                                valorOrigen,
+                                idPuertoSalida,
+                                fechaSalida,
+                                horaSalida,
+                                valorDestino,
+                                idPuertoLlegada,
+                                fechaLlegada,
+                                horaLlegada);
+
+                            print(
+                                "el objeto que registro fue ${itinerario.getOrigen()}, ${itinerario.getAeroPuerto()}");
+                          },
                         ),
                         CupertinoButton(
                           color: Colors.amberAccent,
@@ -367,9 +433,6 @@ class _CState extends State<GestionarItinerario> {
 /*
 * TextButton() es un boton de texto tipo material
 *
-
-
-
 Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [

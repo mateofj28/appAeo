@@ -43,9 +43,11 @@ class _MyHomePageState extends State<MyHomePage> {
   bool signRoot = false;
   bool signUser = true;
 
+  //flutter run -d chrome --web-port 51094
   //Solicita iniciar seccion o registrarse --> AlertDialo
   //metodo iniciar session
   void signUp(String user, String pass) {
+    
     if (user == _user && pass == _pass) {
       //mostrar datos del usuario, los vuelos, gestionar sus datos y sus historiales
 
@@ -148,7 +150,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 onTap: () {
                   setState(() {
                     signRoot = false;
-                  });                  
+                  });
                   Navigator.pop(context);
                 }),
           ],
