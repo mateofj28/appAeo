@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rounded_date_picker/flutter_rounded_date_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'package:my_fly/view/ViewItinerario.dart';
 
 import 'model/Itinerario.dart';
 
@@ -19,6 +20,7 @@ class _CState extends State<GestionarItinerario> {
   List<dynamic> dataPuertoSalida = [], dataPuertoLlegada = [];
   List<String> arrayPuertoSalida = [], arrayPuertoLlegada = [];
   List<String> aeropuertos = [];
+  List<ViewItinerario> arrayItinerarios = [];
 
   Itinerario itinerario;
   int idPuertoLlegada, idPuertoSalida;
@@ -48,6 +50,20 @@ class _CState extends State<GestionarItinerario> {
     //aca estan los puertos que se usan en el drop
     arrayPuertoSalida = listaRellenar;
     setState(() {});
+  }
+
+  Future getItinerarios() async{
+    final response = await http.get(Uri.parse('http://localhost:8080/api/itinerario'));
+    var data = json.decode(response.body);
+    for(var i in data){
+     ViewItinerario viewItinerario = new ViewItinerario(i['id'],
+         i['origen'], i['puertoOrigen']['nombre'], i['fechaSalida'], i['horaSalida'], i['destino'],
+         i['puertoDestino']['nombre'], i['fechaLlegada'], i['horaLlegada']);
+     arrayItinerarios.add(viewItinerario);
+    }
+    setState(() {
+    });
+    
   }
 
   int getIdObject(String value, List<dynamic> lista) {
@@ -100,6 +116,7 @@ class _CState extends State<GestionarItinerario> {
     super.initState();
     //obtener las ciudades
     getDataCity('http://localhost:8080/api/ciudad');
+    getItinerarios();
   }
 
   @override
@@ -409,19 +426,37 @@ class _CState extends State<GestionarItinerario> {
                           DataColumn(label: Text('Fecha salida')),
                           DataColumn(label: Text('Hora salida')),
                         ],
-                        rows: [
-                          DataRow(cells: [
-                            DataCell(Text('1')),
-                            DataCell(Text('España')),
-                            DataCell(Text('EROPAR')),
-                            DataCell(Text('27/09/2000')),
-                            DataCell(Text('01:22 PM')),
-                            DataCell(Text('francia')),
-                            DataCell(Text('only')),
-                            DataCell(Text('29/09/2020')),
-                            DataCell(Text('11:32 PM')),
-                          ])
-                        ]),
+                        rows: arrayItinerarios.map((e) => DataRow(
+                            cells: [
+                              DataCell(
+                                Text('${e.id}'),
+                              ),
+                              DataCell(
+                                Text('${e.source}'),
+                              ),
+                              DataCell(
+                                Text('${e.namePort}'),
+                              ),
+                              DataCell(
+                                Text('${e.starDate}'),
+                              ),
+                              DataCell(
+                                Text('${e.startTime}'),
+                              ),
+                              DataCell(
+                                Text('${e.destiny}'),
+                              ),
+                              DataCell(
+                                Text('${e.namePortEnd}'),
+                              ),
+                              DataCell(
+                                Text('${e.endDate}'),
+                              ),
+                              DataCell(
+                                Text('${e.endTime}'),
+                              )
+                            ]
+                        ))),
                   )),
               SizedBox(height: 60.0)
             ],
