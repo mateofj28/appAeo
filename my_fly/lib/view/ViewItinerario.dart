@@ -2,7 +2,7 @@ class ViewItinerario {
 
   int _id;
   String _namePort, _namePortEnd, _source, _destiny, _startTime, _endTime;
-  DateTime _starDate, _endDate;
+  String _starDate, _endDate;
 
   ViewItinerario(
       this._id,
@@ -22,9 +22,9 @@ class ViewItinerario {
     _endDate = value;
   }
 
-  DateTime get starDate => _starDate;
+  String get starDate => _starDate;
 
-  set starDate(DateTime value) {
+  set starDate(String value) {
     _starDate = value;
   }
 

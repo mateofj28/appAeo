@@ -37,8 +37,6 @@ class _CState extends State<GestionarItinerario> {
       listaRellenar.add(lista[i]['nombre'].toString());
     }
 
-    print("el objeto es: ${listaRellenar}");
-
     if (id == 1) {
       arrayPuertoLlegada = listaRellenar;
     }
@@ -53,14 +51,31 @@ class _CState extends State<GestionarItinerario> {
   }
 
   Future getItinerarios() async{
+    ViewItinerario viewItinerario;
     final response = await http.get(Uri.parse('http://localhost:8080/api/itinerario'));
     var data = json.decode(response.body);
+    print("$data");
     for(var i in data){
-     ViewItinerario viewItinerario = new ViewItinerario(i['id'],
-         i['origen'], i['puertoOrigen']['nombre'], i['fechaSalida'], i['horaSalida'], i['destino'],
-         i['puertoDestino']['nombre'], i['fechaLlegada'], i['horaLlegada']);
-     arrayItinerarios.add(viewItinerario);
+
+      print(" el aeropuerto fue: ${i['puertoOrigen']['nombre']}");
+
+      viewItinerario = new ViewItinerario(
+          i['id'],
+          i['origen'],
+          i['puertoOrigen']['nombre'],
+          i['fechaSalida'],
+          i['horaSalida'],
+          i['destino'],
+          i['puertoDestino']['nombre'],
+          i['fechaLlegada'],
+          i['horaLlegada']);
+
+      print("el objeto view: ${viewItinerario.id}, ${viewItinerario.source}");
+      arrayItinerarios.add(viewItinerario);
+
     }
+
+    print("los itinerarios fueron: ${arrayItinerarios[0].id}, ${arrayItinerarios[0].source}");
     setState(() {
     });
     
@@ -87,11 +102,10 @@ class _CState extends State<GestionarItinerario> {
         });
 
     List<dynamic> data = json.decode(response.body);
-    print("el aeropuerto fue: ${data[0]['id']}, ${data[0]['nombre']}");
+
     
     if (key == 1) {
       dataPuertoLlegada = data;
-      print("el puerto fue: -> $dataPuertoLlegada");
     }
 
     dataPuertoSalida = data;
@@ -107,7 +121,6 @@ class _CState extends State<GestionarItinerario> {
     });
     List<dynamic> data = json.decode(response.body);
     dataCiudades = data;
-    print("las ciudades obtenidas fueron: ${dataCiudades}");
     transformarJson(data, 2);
   }
 
@@ -408,57 +421,69 @@ class _CState extends State<GestionarItinerario> {
                       ])
                 ]),
               ),
-              Container(
-                  width: double.maxFinite,
-                  height: 50.0,
-                  child: Center(
-                    child: DataTable(
-                        sortColumnIndex: 0,
-                        sortAscending: true,
-                        columns: [
-                          DataColumn(label: Text('id')),
-                          DataColumn(label: Text('Origen')),
-                          DataColumn(label: Text('Aeropuerto')),
-                          DataColumn(label: Text('Fecha salida')),
-                          DataColumn(label: Text('Hora salida')),
-                          DataColumn(label: Text('Destino')),
-                          DataColumn(label: Text('Aeropuerto')),
-                          DataColumn(label: Text('Fecha salida')),
-                          DataColumn(label: Text('Hora salida')),
-                        ],
-                        rows: arrayItinerarios.map((e) => DataRow(
-                            cells: [
-                              DataCell(
-                                Text('${e.id}'),
-                              ),
-                              DataCell(
-                                Text('${e.source}'),
-                              ),
-                              DataCell(
-                                Text('${e.namePort}'),
-                              ),
-                              DataCell(
-                                Text('${e.starDate}'),
-                              ),
-                              DataCell(
-                                Text('${e.startTime}'),
-                              ),
-                              DataCell(
-                                Text('${e.destiny}'),
-                              ),
-                              DataCell(
-                                Text('${e.namePortEnd}'),
-                              ),
-                              DataCell(
-                                Text('${e.endDate}'),
-                              ),
-                              DataCell(
-                                Text('${e.endTime}'),
-                              )
-                            ]
-                        ))),
-                  )),
-              SizedBox(height: 60.0)
+              Padding(
+                padding: const EdgeInsets.only(left: 100.0, right: 100.0),
+                child: Container(
+                  width: 1200.0,
+                  height: 500.0,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black)
+                  ),
+                  child: Scrollbar(
+                    isAlwaysShown: true,
+                    child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: SingleChildScrollView(
+                          child: DataTable(
+                              columns: [
+                                DataColumn(label: Text('id')),
+                                DataColumn(label: Text('Origen')),
+                                DataColumn(label: Text('Aeropuerto')),
+                                DataColumn(label: Text('Fecha salida')),
+                                DataColumn(label: Text('Hora salida')),
+                                DataColumn(label: Text('Destino')),
+                                DataColumn(label: Text('Aeropuerto')),
+                                DataColumn(label: Text('Fecha salida')),
+                                DataColumn(label: Text('Hora salida')),
+                              ],
+                              rows: arrayItinerarios.map((e) => DataRow(
+                                  cells: [
+                                    DataCell(
+                                      Text('${e.id}'),
+                                    ),
+                                    DataCell(
+                                      Text('${e.source}'),
+                                    ),
+                                    DataCell(
+                                      Text('${e.namePort}'),
+                                    ),
+                                    DataCell(
+                                      Text('${e.starDate}'),
+                                    ),
+                                    DataCell(
+                                      Text('${e.startTime}'),
+                                    ),
+                                    DataCell(
+                                      Text('${e.destiny}'),
+                                    ),
+                                    DataCell(
+                                      Text('${e.namePortEnd}'),
+                                    ),
+                                    DataCell(
+                                      Text('${e.endDate}'),
+                                    ),
+                                    DataCell(
+                                      Text('${e.endTime}'),
+                                    )
+                                  ]
+                              )).toList()
+                          )
+                        )
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 50.0)
             ],
           ),
         ));
