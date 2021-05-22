@@ -1,11 +1,14 @@
+import 'Aeropuerto.dart';
+
 class Itinerario {
+
   String _origen;
-  int _puertoOrigen;
-  String _fechaSalida;
+  Aeropuerto _puertoOrigen;
+  DateTime _fechaSalida;
   String _horaSalida;
   String _destino;
-  int _puertoDestino;
-  String _fechaLlegada;
+  Aeropuerto _puertoDestino;
+  DateTime _fechaLlegada;
   String _horaLlegada;
 
   Itinerario(
@@ -18,80 +21,53 @@ class Itinerario {
       this._fechaLlegada,
       this._horaLlegada);
 
-  String getOrigen() {
-    return this._origen;
+
+
+  String get horaLlegada => _horaLlegada;
+
+  set horaLlegada(String value) {
+    _horaLlegada = value;
   }
 
-  void setOrigen(String origen) {
-    this._origen = origen;
+  DateTime get fechaLlegada => _fechaLlegada;
+
+  set fechaLlegada(DateTime value) {
+    _fechaLlegada = value;
   }
 
-  int getAeroPuerto() {
-    return this._puertoOrigen;
+  Aeropuerto get puertoDestino => _puertoDestino;
+
+  set puertoDestino(Aeropuerto value) {
+    _puertoDestino = value;
   }
 
-  void setAeropuerto(int puertoOrigen) {
-    this._puertoOrigen = puertoOrigen;
+  String get destino => _destino;
+
+  set destino(String value) {
+    _destino = value;
   }
 
-  String getFechaSalida() {
-    return this._fechaSalida;
+  String get horaSalida => _horaSalida;
+
+  set horaSalida(String value) {
+    _horaSalida = value;
   }
 
-  void setFechaSalida(String fechaSalida) {
-    this._fechaSalida = fechaSalida;
+  DateTime get fechaSalida => _fechaSalida;
+
+  set fechaSalida(DateTime value) {
+    _fechaSalida = value;
   }
 
-  String getHoraSalida() {
-    return this._horaSalida;
+  Aeropuerto get puertoOrigen => _puertoOrigen;
+
+  set puertoOrigen(Aeropuerto value) {
+    _puertoOrigen = value;
   }
 
-  void setHoraSalida(String horaSalida) {
-    this._horaSalida = horaSalida;
-  }
+  String get origen => _origen;
 
-  String getDestino() {
-    return this._destino;
-  }
-
-  void setDestino(String destino) {
-    this._destino = destino;
-  }
-
-  int getPuertoLlegada() {
-    return this._puertoDestino;
-  }
-
-  void setPuertoLlegada(int puertoLlegada) {
-    this._puertoDestino = puertoLlegada;
-  }
-
-  String getFechaLlegada() {
-    return this._fechaLlegada;
-  }
-
-  void setFechaLlegada(String fechaLlegada) {
-    this._fechaLlegada = fechaLlegada;
-  }
-
-  String getHoraLlegada() {
-    return this._horaLlegada;
-  }
-
-  void setHoraLlegada(String horaLlegada) {
-    this._horaLlegada = horaLlegada;
-  }
-
-  Map<String, dynamic> toMap(Itinerario itinerario) {
-    return {
-      "origen": itinerario.getOrigen(),
-      "puerto_origen_id": itinerario.getAeroPuerto(),
-      "fecha_salida": itinerario.getFechaSalida(),
-      "hora_salia": itinerario.getHoraSalida(),
-      "destino": itinerario.getDestino(),
-      "puerto_destino_id": itinerario.getPuertoLlegada(),
-      "fecha_llegada": itinerario.getFechaLlegada(),
-      "hora_llegada": itinerario.getHoraLlegada(),
-    };
+  set origen(String value) {
+    _origen = value;
   }
 }

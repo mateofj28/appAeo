@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rounded_date_picker/flutter_rounded_date_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'package:my_fly/model/Aeropuerto.dart';
+import 'package:my_fly/model/Ciudad.dart';
+import 'package:my_fly/model/Pais.dart';
 import 'package:my_fly/view/ViewItinerario.dart';
 
 import 'model/Itinerario.dart';
@@ -22,7 +25,7 @@ class _CState extends State<GestionarItinerario> {
   List<String> aeropuertos = [];
   List<ViewItinerario> arrayItinerarios = [];
 
-  Itinerario itinerario;
+  DateTime dateFechaSalida, dateFechaLlegada;
   int idPuertoLlegada, idPuertoSalida;
   String valorOrigen = "Selecionar Origen", valorDestino = "Selecionar Destino";
   String puertoSalida = "Seleccionar aeropuerto",
@@ -30,6 +33,148 @@ class _CState extends State<GestionarItinerario> {
   String fechaSalida = "", fechaLlegada = "";
   String horaSalida = "";
   String horaLlegada = "";
+
+  Future<dynamic> getPuerto(int id) async {
+    final response = await http
+        .get(Uri.parse('http://localhost:8080/api/aeropuerto/id?id=$id'));
+    var data = json.decode(response.body);
+    return data;
+  }
+
+  Map<String, Object> toMap(Itinerario iti) => {
+        "origen": iti.origen,
+        "puertoOrigen": {
+          "id": iti.puertoOrigen.id,
+          "nombre": iti.puertoOrigen.nombre,
+          "ciudad": {
+            "id": iti.puertoOrigen.ciudad.id,
+            "nombre": iti.puertoOrigen.ciudad.nombre,
+            "pais": {
+              "id": iti.puertoOrigen.ciudad.pais.id,
+              "nombre": iti.puertoOrigen.ciudad.pais.nombre
+            }
+          }
+        },
+        "fechaSalida": iti.fechaSalida,
+        "horaSalida": iti.horaSalida,
+        "destino": iti.destino,
+        "puertoDestino": {
+          "id": iti.puertoDestino.id,
+          "nombre": iti.puertoDestino.nombre,
+          "ciudad": {
+            "id": iti.puertoDestino.ciudad.id,
+            "nombre": iti.puertoDestino.ciudad.nombre,
+            "pais": {
+              "id": iti.puertoDestino.ciudad.pais.id,
+              "nombre": iti.puertoDestino.ciudad.pais.nombre
+            }
+          }
+        },
+        "fechaLlegada": iti.fechaLlegada,
+        "horaLlegada": iti.horaLlegada,
+      };
+
+  guardarIti(
+      int idOrigen,
+      idDestino,
+      String origen,
+      DateTime fechaSalida,
+      String horaSalida,
+      String destino,
+      DateTime fechaLlegada,
+      String horaLlegada) async {
+    dynamic puertoSalidaMap = await getPuerto(idOrigen);
+    dynamic puertoLlegadaMap = await getPuerto(idDestino);
+
+    print("$puertoSalidaMap");
+    print("$puertoLlegadaMap");
+
+    Pais paisOrigen = new Pais(puertoSalidaMap['ciudad']['pais']['id'],
+        puertoSalidaMap['ciudad']['pais']['nombre']);
+
+    Pais paisDestino = new Pais(puertoLlegadaMap['ciudad']['pais']['id'],
+        puertoLlegadaMap['ciudad']['pais']['nombre']);
+
+    Ciudad ciudadOrigen = new Ciudad(puertoSalidaMap['ciudad']['id'],
+        puertoSalidaMap['ciudad']['nombre'], paisOrigen);
+
+    Ciudad ciudadDestino = new Ciudad(puertoLlegadaMap['ciudad']['id'],
+        puertoLlegadaMap['ciudad']['nombre'], paisDestino);
+
+    Aeropuerto puertoOrigen = new Aeropuerto(
+        puertoSalidaMap['id'], puertoSalidaMap['nombre'], ciudadOrigen);
+
+    Aeropuerto puertoDestino = new Aeropuerto(
+        puertoSalidaMap['id'], puertoSalidaMap['nombre'], ciudadDestino);
+
+    Itinerario iti = new Itinerario(origen, puertoOrigen, fechaSalida,
+        horaSalida, destino, puertoDestino, fechaLlegada, horaLlegada);
+
+    print(
+        "el objeto iti es: ${iti.origen}, ${iti.puertoOrigen.nombre}, ${iti.fechaSalida}"
+        "\n${iti.horaSalida}"
+        "\n${iti.destino}"
+        "\n${iti.puertoDestino.nombre}"
+        "\n${iti.fechaLlegada}"
+        "\n${iti.horaLlegada}");
+
+    final body = json.encode({
+      "origen": iti.origen,
+      "puertoOrigen": {
+        "id": iti.puertoOrigen.id,
+        "nombre": iti.puertoOrigen.nombre,
+        "ciudad": {
+          "id": iti.puertoOrigen.ciudad.id,
+          "nombre": iti.puertoOrigen.ciudad.nombre,
+          "pais": {
+            "id": iti.puertoOrigen.ciudad.pais.id,
+            "nombre": iti.puertoOrigen.ciudad.pais.nombre
+          }
+        }
+      },
+      "fechaSalida": DateFormat('y-MM-d').format(iti.fechaSalida),
+      "horaSalida": iti.horaSalida,
+      "destino": iti.destino,
+      "puertoDestino": {
+        "id": iti.puertoDestino.id,
+        "nombre": iti.puertoDestino.nombre,
+        "ciudad": {
+          "id": iti.puertoDestino.ciudad.id,
+          "nombre": iti.puertoDestino.ciudad.nombre,
+          "pais": {
+            "id": iti.puertoDestino.ciudad.pais.id,
+            "nombre": iti.puertoDestino.ciudad.pais.nombre
+          }
+        }
+      },
+      "fechaLlegada": DateFormat('y-MM-d').format(iti.fechaLlegada),
+      "horaLlegada": iti.horaLlegada,
+    });
+
+    final response = await http.post(
+        Uri.parse('http://localhost:8080/api/itinerario'),
+        body: body,
+        headers: {
+          'Content-Type': 'application/json',
+        });
+
+    print(response.statusCode);
+    var data = json.decode(response.body);
+    ViewItinerario viewIti = new ViewItinerario(
+        data['id'],
+        data['origen'],
+        data['puertoOrigen']['nombre'],
+        DateFormat('y-MM-d').format(DateTime.parse(data['fechaSalida'])),
+        data['horaSalida'],
+        data['destino'],
+        data['puertoDestino']['nombre'],
+        DateFormat('y-MM-d').format(DateTime.parse(data['fechaLlegada'])),
+        data['horaLlegada']);
+    arrayItinerarios.add(viewIti);
+    setState(() {
+      
+    });
+  }
 
   void transformarJson(List<dynamic> lista, int id) {
     List<String> listaRellenar = [];
@@ -50,35 +195,35 @@ class _CState extends State<GestionarItinerario> {
     setState(() {});
   }
 
-  Future getItinerarios() async{
+  Future getItinerarios() async {
     ViewItinerario viewItinerario;
-    final response = await http.get(Uri.parse('http://localhost:8080/api/itinerario'));
+    final response =
+        await http.get(Uri.parse('http://localhost:8080/api/itinerario'));
     var data = json.decode(response.body);
     print("$data");
-    for(var i in data){
-
+    for (var i in data) {
       print(" el aeropuerto fue: ${i['puertoOrigen']['nombre']}");
 
       viewItinerario = new ViewItinerario(
           i['id'],
           i['origen'],
           i['puertoOrigen']['nombre'],
-          i['fechaSalida'],
+          DateFormat('y-MM-d').format(DateTime.parse(i['fechaSalida'])),
           i['horaSalida'],
           i['destino'],
           i['puertoDestino']['nombre'],
-          i['fechaLlegada'],
+          DateFormat('y-MM-d').format(DateTime.parse(i['fechaLlegada'])),
           i['horaLlegada']);
 
       print("el objeto view: ${viewItinerario.id}, ${viewItinerario.source}");
       arrayItinerarios.add(viewItinerario);
-
     }
 
-    print("los itinerarios fueron: ${arrayItinerarios[0].id}, ${arrayItinerarios[0].source}");
+    print("tamaño de la lista es: ${arrayItinerarios.length}");
+    print("${arrayItinerarios[0].source}");
     setState(() {
-    });
-    
+      
+    });    
   }
 
   int getIdObject(String value, List<dynamic> lista) {
@@ -103,7 +248,6 @@ class _CState extends State<GestionarItinerario> {
 
     List<dynamic> data = json.decode(response.body);
 
-    
     if (key == 1) {
       dataPuertoLlegada = data;
     }
@@ -212,6 +356,7 @@ class _CState extends State<GestionarItinerario> {
                                   initialDatePickerMode: CupertinoDatePickerMode
                                       .date, onDateTimeChanged: (newDate) {
                                 setState(() {
+                                  dateFechaSalida = newDate;
                                   fechaSalida =
                                       DateFormat('y-MM-d').format(newDate);
                                 });
@@ -328,6 +473,7 @@ class _CState extends State<GestionarItinerario> {
                                   initialDatePickerMode: CupertinoDatePickerMode
                                       .date, onDateTimeChanged: (newDate) {
                                 setState(() {
+                                  dateFechaLlegada = newDate;
                                   fechaLlegada =
                                       DateFormat('y-MM-d').format(newDate);
                                 });
@@ -399,18 +545,17 @@ class _CState extends State<GestionarItinerario> {
                           color: Colors.lime,
                           child: Text('Registrar'),
                           onPressed: () {
-                            itinerario = new Itinerario(
-                                valorOrigen,
-                                idPuertoSalida,
-                                fechaSalida,
-                                horaSalida,
-                                valorDestino,
-                                idPuertoLlegada,
-                                fechaLlegada,
-                                horaLlegada);
-
-                            print(
-                                "el objeto que registro fue ${itinerario.getOrigen()}, ${itinerario.getAeroPuerto()}");
+                            setState(() {
+                              guardarIti(
+                                  idPuertoSalida,
+                                  idPuertoLlegada,
+                                  valorOrigen,
+                                  dateFechaSalida,
+                                  horaSalida,
+                                  valorDestino,
+                                  dateFechaLlegada,
+                                  horaLlegada);
+                            });
                           },
                         ),
                         CupertinoButton(
@@ -426,60 +571,15 @@ class _CState extends State<GestionarItinerario> {
                 child: Container(
                   width: 1200.0,
                   height: 500.0,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black)
-                  ),
+                  decoration:
+                      BoxDecoration(border: Border.all(color: Colors.black)),
                   child: Scrollbar(
-                    isAlwaysShown: true,
                     child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: SingleChildScrollView(
-                          child: DataTable(
-                              columns: [
-                                DataColumn(label: Text('id')),
-                                DataColumn(label: Text('Origen')),
-                                DataColumn(label: Text('Aeropuerto')),
-                                DataColumn(label: Text('Fecha salida')),
-                                DataColumn(label: Text('Hora salida')),
-                                DataColumn(label: Text('Destino')),
-                                DataColumn(label: Text('Aeropuerto')),
-                                DataColumn(label: Text('Fecha salida')),
-                                DataColumn(label: Text('Hora salida')),
-                              ],
-                              rows: arrayItinerarios.map((e) => DataRow(
-                                  cells: [
-                                    DataCell(
-                                      Text('${e.id}'),
-                                    ),
-                                    DataCell(
-                                      Text('${e.source}'),
-                                    ),
-                                    DataCell(
-                                      Text('${e.namePort}'),
-                                    ),
-                                    DataCell(
-                                      Text('${e.starDate}'),
-                                    ),
-                                    DataCell(
-                                      Text('${e.startTime}'),
-                                    ),
-                                    DataCell(
-                                      Text('${e.destiny}'),
-                                    ),
-                                    DataCell(
-                                      Text('${e.namePortEnd}'),
-                                    ),
-                                    DataCell(
-                                      Text('${e.endDate}'),
-                                    ),
-                                    DataCell(
-                                      Text('${e.endTime}'),
-                                    )
-                                  ]
-                              )).toList()
-                          )
-                        )
-                    ),
+                            child: (arrayItinerarios.length >= 0)
+                                ? buildTable()
+                                : CircularProgressIndicator())),
                   ),
                 ),
               ),
@@ -488,192 +588,48 @@ class _CState extends State<GestionarItinerario> {
           ),
         ));
   }
-}
 
-/*
-* TextButton() es un boton de texto tipo material
-*
-Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Text('Datos de salida'),
-              Container(
-                  width: 180.00,
-                  height: 30.0,
-                  decoration: BoxDecoration(color: Colors.pink)),
-              Row(
-                children: [
-                  CupertinoButton(
-                      child: Text("Seleccionar fecha"),
-                      onPressed: () {
-                        CupertinoRoundedDatePicker.show(context,
-                            fontFamily: "Mali",
-                            textColor: Colors.black,
-                            background: Colors.white,
-                            borderRadius: 30,
-                            initialDatePickerMode: CupertinoDatePickerMode.date,
-                            onDateTimeChanged: (newDate) {
-                          setState(() {
-                            fechaSalida =
-                                DateFormat('EEE, M/d/y').format(newDate);
-                          });
-                        });
-                      },
-                      color: Colors.deepPurple),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 20.0),
-                    child: Text('$fechaSalida'),
-                  )
-                ],
-              ),
-              Row(
-                children: [
-                  CupertinoButton(
-                      onPressed: () {
-                        CupertinoRoundedDatePicker.show(context,
-                            fontFamily: "Mali",
-                            textColor: Colors.black,
-                            background: Colors.white,
-                            borderRadius: 30,
-                            initialDatePickerMode: CupertinoDatePickerMode.time,
-                            onDateTimeChanged: (newDate) {
-                          setState(() {
-                            horaSalida = DateFormat('hh:mm a').format(newDate);
-                          });
-                        });
-                      },
-                      color: Colors.blue,
-                      child: Text('Seleccionar hora')),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 15.0),
-                    child: Text('$horaSalida'),
-                  )
-                ],
-              ),
-              Container(
-                  width: 180.00,
-                  height: 30.0,                  
-                  child: Expanded(
-                    child: DropdownButton(
-                      hint: Text('Origen'),
-                      dropdownColor: Colors.white,
-                      elevation: 5,
-                      icon: Icon(Icons.arrow_drop_down),
-                      iconSize: 36.0,
-                      onChanged: (value) {
-                        setState(() {});
-                      },
-                      items: lista
-                          .map(
-                              (e) => DropdownMenuItem(value: e, child: Text(e)))
-                          .toList(),
+  DataTable buildTable() => DataTable(
+          columns: [
+            DataColumn(label: Text('id')),
+            DataColumn(label: Text('Origen')),
+            DataColumn(label: Text('Aeropuerto.dart')),
+            DataColumn(label: Text('Fecha salida')),
+            DataColumn(label: Text('Hora salida')),
+            DataColumn(label: Text('Destino')),
+            DataColumn(label: Text('Aeropuerto.dart')),
+            DataColumn(label: Text('Fecha salida')),
+            DataColumn(label: Text('Hora salida')),
+          ],
+          rows: arrayItinerarios
+              .map((e) => DataRow(cells: [
+                    DataCell(
+                      Text('${e.id}'),
                     ),
-                  )),
-              Text('Datos de llegada'),
-              Container(
-                  width: 180.00,
-                  height: 30.0,
-                  decoration: BoxDecoration(color: Colors.pink)),
-              Row(
-                children: [
-                  CupertinoButton(
-                      child: Text("Seleccionar fecha"),
-                      onPressed: () {
-                        CupertinoRoundedDatePicker.show(context,
-                            fontFamily: "Mali",
-                            textColor: Colors.black,
-                            background: Colors.white,
-                            borderRadius: 30,
-                            initialDatePickerMode: CupertinoDatePickerMode.date,
-                            onDateTimeChanged: (newDate) {
-                          setState(() {
-                            fechaLlegada =
-                                DateFormat('EEE, M/d/y').format(newDate);
-                          });
-                        });
-                      },
-                      color: Colors.deepPurple),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 20.0),
-                    child: Text('$fechaLlegada'),
-                  )
-                ],
-              ),
-              Row(
-                children: [
-                  CupertinoButton(
-                      onPressed: () {
-                        CupertinoRoundedDatePicker.show(context,
-                            fontFamily: "Mali",
-                            textColor: Colors.black,
-                            background: Colors.white,
-                            borderRadius: 30,
-                            initialDatePickerMode: CupertinoDatePickerMode.time,
-                            onDateTimeChanged: (newDate) {
-                          setState(() {
-                            horaLlegada = DateFormat('hh:mm a').format(newDate);
-                          });
-                        });
-                      },
-                      color: Colors.blue,
-                      child: Text('Seleccionar hora')),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10.0),
-                    child: Text('$horaLlegada'),
-                  )
-                ],
-              ),
-              Container(
-                  width: 180.00,
-                  height: 40.0,                  
-                  child: DropdownButton(
-                      hint: Text('Destino'),
-                      dropdownColor: Colors.white,
-                      elevation: 5,
-                      isExpanded: true,
-                      icon: Icon(Icons.arrow_drop_down),
-                      iconSize: 36.0,
-                      onChanged: (value) {
-                        setState(() {});
-                      },
-                      items: lista
-                          .map(
-                              (e) => DropdownMenuItem(value: e, child: Text(e)))
-                          .toList(),                    
-                  )),
-            ],
-          ),
-          Column(
-            children: [
-              Text('Crear Itinerario',
-                  style: CupertinoTheme.of(context)
-                      .textTheme
-                      .navLargeTitleTextStyle),
-              Text('Anexa todos los datos para poder llevar acabo el registro',
-                  style: CupertinoTheme.of(context)
-                      .textTheme
-                      .pickerTextStyle),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                CupertinoButton(
-                  child: Text('Guardar'),
-                  onPressed: () {},
-                ),
-                CupertinoButton(
-                  child: Text('Editar'),
-                  onPressed: () {},
-                )
-              ])
-            ],
-          ),
-        ],
-      )
-
-
-
-
-* */
+                    DataCell(
+                      Text('${e.source}'),
+                    ),
+                    DataCell(
+                      Text('${e.namePort}'),
+                    ),
+                    DataCell(
+                      Text('${e.starDate}'),
+                    ),
+                    DataCell(
+                      Text('${e.startTime}'),
+                    ),
+                    DataCell(
+                      Text('${e.destiny}'),
+                    ),
+                    DataCell(
+                      Text('${e.namePortEnd}'),
+                    ),
+                    DataCell(
+                      Text('${e.endDate}'),
+                    ),
+                    DataCell(
+                      Text('${e.endTime}'),
+                    ),
+                  ]))
+              .toList());
+}
