@@ -1,8 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:my_fly/GestionarItinerario.dart';
 import 'package:my_fly/GestionarVuelo.dart';
 import 'package:my_fly/ObtenerDetalleSillaVuelo.dart';
+import 'package:http/http.dart' as http;
+
+import 'model/Pasajero.dart';
 
 void main() {
   runApp(MyApp());
@@ -13,7 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'My fly',
+      title: 'AirCol',
       theme: ThemeData.light(),
       home: MyHomePage(title: 'Home'),
     );
@@ -31,40 +36,30 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   TextEditingController txtNombre = new TextEditingController();
+  TextEditingController txtApellido = new TextEditingController();
   TextEditingController txtCedula = new TextEditingController();
+  TextEditingController txtTelefono = new TextEditingController();
   TextEditingController txtCorreo = new TextEditingController();
   TextEditingController txtContrasena = new TextEditingController();
-  TextEditingController txtCorreoNombre = new TextEditingController();
 
   String _admin = "root";
-  String _passAdmin = '';
-  String _user = "mateo";
-  String _pass = "1234";
   bool signRoot = false;
-  bool signUser = true;
+  bool startSign = false;
+  bool notShowPass = true;
 
   //flutter run -d chrome --web-port 51094
   //Solicita iniciar seccion o registrarse --> AlertDialo
   //metodo iniciar session
-  void signUp(String user, String pass) {
-    
-    if (user == _user && pass == _pass) {
-      //mostrar datos del usuario, los vuelos, gestionar sus datos y sus historiales
-
-    } else if (user == _admin && pass == _passAdmin) {
-      //mostrar datos del usuario, los vuelos, gestionar sus datos y sus historiales
-      signRoot = true;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     print("el valor es: $signRoot");
+    print('el valor del usuario empezo en: $startSign');
     print(signRoot == false);
 
     return Scaffold(
         appBar: AppBar(title: Text(widget.title), actions: <Widget>[
-          if (signRoot == false)
+          if (startSign == false)
             Container(
               padding: EdgeInsets.all(6.0),
               child: ElevatedButton(
@@ -77,7 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                   child: Text('Iniciar sesión')),
             ),
-          if (signRoot == false)
+          if (startSign == false)
             Container(
               padding: EdgeInsets.all(6.0),
               width: 130.0,
@@ -86,7 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     backgroundColor:
                         MaterialStateProperty.all<Color>(Colors.green[900]),
                   ),
-                  onPressed: registrarUsu,
+                  onPressed: showDialoSave,
                   child: Text('Registrarse')),
             ),
         ]),
@@ -149,7 +144,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 title: Text("Cerrar sesión"),
                 onTap: () {
                   setState(() {
-                    signRoot = false;
+                    startSign = false;
                   });
                   Navigator.pop(context);
                 }),
@@ -187,9 +182,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-        )
-        // This trailing comma makes auto-formatting nicer for build methods.
-        );
+        ));
   }
 
   void gestionarDetalleSilla() {
@@ -204,109 +197,211 @@ class _MyHomePageState extends State<MyHomePage> {
     return showDialog<void>(
         context: context,
         builder: (context) {
-          return CupertinoAlertDialog(
-            title: Text('Iniciar sesión'),
-            content: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: CupertinoTextField(
-                    controller: txtCorreoNombre,
-                    placeholder: 'Correo',
-                    keyboardType: TextInputType.number,
-                    style: TextStyle(color: CupertinoColors.inactiveGray),
+          return Material(
+            color: Colors.transparent,
+            child: CupertinoAlertDialog(
+              title: Text('Iniciar sesión'),
+              content: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: CupertinoTextField(
+                      controller: txtCorreo,
+                      placeholder: 'Correo',
+                      style: TextStyle(color: CupertinoColors.inactiveGray),
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: CupertinoTextField(
-                      controller: txtContrasena,
-                      placeholder: 'Contraseña',
-                      keyboardType: TextInputType.number,
-                      style: TextStyle(color: CupertinoColors.inactiveGray)),
-                ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: CupertinoTextField(
+                        obscureText: notShowPass,
+                        controller: txtContrasena,
+                        placeholder: 'Contraseña',
+                        style: TextStyle(color: CupertinoColors.inactiveGray)),
+                  ),
+                ],
+              ),
+              actions: [
+                CupertinoDialogAction(
+                    onPressed: () {
+                      setState(() {
+                        txtCorreo.text = "";
+                        txtContrasena.text = "";
+                        Navigator.of(context).pop();
+                      });
+                    },
+                    child: Text('Salir')),
+                CupertinoDialogAction(
+                    onPressed: () {
+                      setState(() {
+                        if (txtCorreo.text == _admin) {
+                          startSign = true;
+                          signRoot = true;
+                          print("Inicio sesion el admin");
+                        } else {
+                          getPasajero(txtCorreo, txtContrasena);
+                        }                       
+                        Navigator.of(context).pop();
+                      });
+                    },
+                    child: Text('Iniciar sesion'))
               ],
             ),
-            actions: [
-              CupertinoDialogAction(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Text('Salir')),
-              CupertinoDialogAction(
-                  onPressed: () {
-                    setState(() {
-                      signUp(txtCorreoNombre.text, txtContrasena.text);
-                      Navigator.of(context).pop();
-                    });
-                  },
-                  child: Text('Iniciar sesion'))
-            ],
           );
         });
   }
 
-  Future<void> registrarUsu() async {
+  Future<void> showDialoSave() async {
     return showDialog<void>(
         context: context,
         builder: (context) {
-          return CupertinoAlertDialog(
-            title: Text('Registrarse'),
-            content: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: CupertinoTextField(
-                    controller: txtNombre,
-                    placeholder: 'Nombre completo',
-                    keyboardType: TextInputType.number,
-                    style: TextStyle(color: CupertinoColors.inactiveGray),
+          return Material(
+            color: Colors.transparent,
+            child: CupertinoAlertDialog(
+              title: Text('Registrarse'),
+              content: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: CupertinoTextField(
+                      controller: txtNombre,
+                      placeholder: 'Nombre',
+                      keyboardType: TextInputType.text,
+                      style: TextStyle(color: CupertinoColors.inactiveGray),
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: CupertinoTextField(
-                      controller: txtCedula,
-                      placeholder: 'Cedula',
-                      keyboardType: TextInputType.number,
-                      style: TextStyle(color: CupertinoColors.inactiveGray)),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: CupertinoTextField(
-                      controller: txtCorreo,
-                      placeholder: 'Correo',
-                      keyboardType: TextInputType.number,
-                      style: TextStyle(color: CupertinoColors.inactiveGray)),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: CupertinoTextField(
-                      controller: txtContrasena,
-                      placeholder: 'Contraseña',
-                      keyboardType: TextInputType.number,
-                      style: TextStyle(color: CupertinoColors.inactiveGray)),
-                ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: CupertinoTextField(
+                      controller: txtApellido,
+                      placeholder: 'Apellido',
+                      keyboardType: TextInputType.text,
+                      style: TextStyle(color: CupertinoColors.inactiveGray),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: CupertinoTextField(
+                        controller: txtCedula,
+                        placeholder: 'Cedula',
+                        keyboardType: TextInputType.number,
+                        style: TextStyle(color: CupertinoColors.inactiveGray)),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: CupertinoTextField(
+                        controller: txtTelefono,
+                        placeholder: 'Teléfono',
+                        keyboardType: TextInputType.number,
+                        style: TextStyle(color: CupertinoColors.inactiveGray)),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: CupertinoTextField(
+                        controller: txtCorreo,
+                        placeholder: 'Correo',
+                        keyboardType: TextInputType.text,
+                        style: TextStyle(color: CupertinoColors.inactiveGray)),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: CupertinoTextField(
+                        controller: txtContrasena,
+                        placeholder: 'Contraseña',
+                        keyboardType: TextInputType.text,
+                        obscureText: true,
+                        style: TextStyle(color: CupertinoColors.inactiveGray)),
+                  ),
+                ],
+              ),
+              actions: [
+                CupertinoDialogAction(
+                    onPressed: () {
+                      setState(() {
+                        txtCorreo.text = "";
+                        txtContrasena.text = "";
+                        Navigator.of(context).pop();
+                      });
+                    },
+                    child: Text('Salir')),
+                CupertinoDialogAction(
+                    onPressed: () {
+                      setState(() {
+                        /**crear el metodo future
+                         * crear el objeto con todos los datos
+                         * usar el metodo
+                         * verificar que si quedó guardado
+                         */
+                        Pasajero pasajero = new Pasajero(
+                            txtCedula.text,
+                            txtNombre.text,
+                            txtApellido.text,
+                            txtTelefono.text,
+                            txtCorreo.text,
+                            txtContrasena.text);
+
+                        print('el objeto fue ${pasajero.nombre}');
+                        savePasajero(pasajero);
+                        txtCorreo.text = "";
+                        txtContrasena.text = "";
+                        iniciarSesion();
+                        Navigator.of(context).pop();
+                      });
+                    },
+                    child: Text('Registrarse'))
               ],
             ),
-            actions: [
-              CupertinoDialogAction(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Text('Salir')),
-              CupertinoDialogAction(
-                  onPressed: () {
-                    setState(() {
-                      Navigator.of(context).pop();
-                      iniciarSesion();
-                      //metodo registrar con objeto creado
-                    });
-                  },
-                  child: Text('Registrarse'))
-            ],
           );
         });
+  }
+
+  /** metodo traer el objeto*/
+  Future getPasajero(
+      TextEditingController correo, TextEditingController contrasena) async {
+    var uri = 'http://localhost:8080/api/pasajero?correo=${correo.text}';
+    final response = await http.get(Uri.parse(uri));
+    var data = json.decode(response.body);
+
+    print('$data');
+    print("los datos fueron ${correo.text}, ${contrasena.text}");
+    if (data['correo'] == correo.text && data['password'] == contrasena.text) {      
+      setState(() {
+        signRoot = false;
+        startSign = true;
+        txtCorreo.text = "";
+        txtContrasena.text = "";
+        print("Inicio sesion el usuario");
+      });
+    } else {
+      var snackBar = SnackBar(
+        content: Text('¡El usuario no existe!'),
+      );
+      // Find the ScaffoldMessenger in the widget tree
+      // and use it to show a SnackBar.
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      print("Error al iniciar sesion");
+    }
+  }
+
+  /**metodo asincrono guardar pasajero */
+  Future savePasajero(Pasajero pasajero) async {
+    String url = 'http://localhost:8080/api/pasajero';
+    final String body = json.encode({
+      "cedula": pasajero.cedula,
+      "nombre": pasajero.nombre,
+      "apellido": pasajero.apellido,
+      "telefono": pasajero.telefono,
+      "correo": pasajero.correo,
+      "contraseña": pasajero.contrasena
+    });
+
+    final response = await http.post(Uri.parse(url), body: body, headers: {
+      'Content-Type': 'application/json',
+    });
+
+    print(response.statusCode);
+    var data = json.decode(response.body);
+    print('${data['id']}');
   }
 
   /* crear card*/
@@ -333,18 +428,48 @@ class _MyHomePageState extends State<MyHomePage> {
               ]))));
 
 /**
-    ListView(
-    padding: EdgeInsets.zero,
-    children: <Widget>[
+import 'package:flutter/material.dart';
 
-    /**aqui se definen los items del drawer */
-    /**primero el header */
+void main() => runApp(SnackBarDemo());
 
+class SnackBarDemo extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'SnackBar Demo',
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('SnackBar Demo'),
+        ),
+        body: SnackBarPage(),
+      ),
+    );
+  }
+}
 
-    //luego el body
-
-
-    ]
-    )
+class SnackBarPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ElevatedButton(
+        onPressed: () {
+          final snackBar = SnackBar(
+            content: Text('Yay! A SnackBar!'),
+            action: SnackBarAction(
+              label: 'Undo',
+              onPressed: () {
+                // Some code to undo the change.
+              },
+            ),
+          );
+          // Find the ScaffoldMessenger in the widget tree
+          // and use it to show a SnackBar.
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        },
+        child: Text('Show SnackBar'),
+      ),
+    );
+  }
+}
  */
 }

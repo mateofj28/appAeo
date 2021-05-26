@@ -39,41 +39,9 @@ class _CState extends State<GestionarItinerario> {
         .get(Uri.parse('http://localhost:8080/api/aeropuerto/id?id=$id'));
     var data = json.decode(response.body);
     return data;
-  }
+  } 
 
-  Map<String, Object> toMap(Itinerario iti) => {
-        "origen": iti.origen,
-        "puertoOrigen": {
-          "id": iti.puertoOrigen.id,
-          "nombre": iti.puertoOrigen.nombre,
-          "ciudad": {
-            "id": iti.puertoOrigen.ciudad.id,
-            "nombre": iti.puertoOrigen.ciudad.nombre,
-            "pais": {
-              "id": iti.puertoOrigen.ciudad.pais.id,
-              "nombre": iti.puertoOrigen.ciudad.pais.nombre
-            }
-          }
-        },
-        "fechaSalida": iti.fechaSalida,
-        "horaSalida": iti.horaSalida,
-        "destino": iti.destino,
-        "puertoDestino": {
-          "id": iti.puertoDestino.id,
-          "nombre": iti.puertoDestino.nombre,
-          "ciudad": {
-            "id": iti.puertoDestino.ciudad.id,
-            "nombre": iti.puertoDestino.ciudad.nombre,
-            "pais": {
-              "id": iti.puertoDestino.ciudad.pais.id,
-              "nombre": iti.puertoDestino.ciudad.pais.nombre
-            }
-          }
-        },
-        "fechaLlegada": iti.fechaLlegada,
-        "horaLlegada": iti.horaLlegada,
-      };
-
+  
   guardarIti(
       int idOrigen,
       idDestino,
@@ -86,8 +54,6 @@ class _CState extends State<GestionarItinerario> {
     dynamic puertoSalidaMap = await getPuerto(idOrigen);
     dynamic puertoLlegadaMap = await getPuerto(idDestino);
 
-    print("$puertoSalidaMap");
-    print("$puertoLlegadaMap");
 
     Pais paisOrigen = new Pais(puertoSalidaMap['ciudad']['pais']['id'],
         puertoSalidaMap['ciudad']['pais']['nombre']);
@@ -110,13 +76,6 @@ class _CState extends State<GestionarItinerario> {
     Itinerario iti = new Itinerario(origen, puertoOrigen, fechaSalida,
         horaSalida, destino, puertoDestino, fechaLlegada, horaLlegada);
 
-    print(
-        "el objeto iti es: ${iti.origen}, ${iti.puertoOrigen.nombre}, ${iti.fechaSalida}"
-        "\n${iti.horaSalida}"
-        "\n${iti.destino}"
-        "\n${iti.puertoDestino.nombre}"
-        "\n${iti.fechaLlegada}"
-        "\n${iti.horaLlegada}");
 
     final body = json.encode({
       "origen": iti.origen,
