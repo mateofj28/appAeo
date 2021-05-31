@@ -1,7 +1,7 @@
 import 'Aeropuerto.dart';
 
 class Itinerario {
-
+  int _id;
   String _origen;
   Aeropuerto _puertoOrigen;
   DateTime _fechaSalida;
@@ -21,8 +21,7 @@ class Itinerario {
       this._fechaLlegada,
       this._horaLlegada);
 
-
-
+  int get id => _id;
   String get horaLlegada => _horaLlegada;
 
   set horaLlegada(String value) {

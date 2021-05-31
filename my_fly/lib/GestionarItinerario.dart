@@ -39,9 +39,8 @@ class _CState extends State<GestionarItinerario> {
         .get(Uri.parse('http://localhost:8080/api/aeropuerto/id?id=$id'));
     var data = json.decode(response.body);
     return data;
-  } 
+  }
 
-  
   guardarIti(
       int idOrigen,
       idDestino,
@@ -53,7 +52,6 @@ class _CState extends State<GestionarItinerario> {
       String horaLlegada) async {
     dynamic puertoSalidaMap = await getPuerto(idOrigen);
     dynamic puertoLlegadaMap = await getPuerto(idDestino);
-
 
     Pais paisOrigen = new Pais(puertoSalidaMap['ciudad']['pais']['id'],
         puertoSalidaMap['ciudad']['pais']['nombre']);
@@ -75,7 +73,6 @@ class _CState extends State<GestionarItinerario> {
 
     Itinerario iti = new Itinerario(origen, puertoOrigen, fechaSalida,
         horaSalida, destino, puertoDestino, fechaLlegada, horaLlegada);
-
 
     final body = json.encode({
       "origen": iti.origen,
@@ -130,9 +127,7 @@ class _CState extends State<GestionarItinerario> {
         DateFormat('y-MM-d').format(DateTime.parse(data['fechaLlegada'])),
         data['horaLlegada']);
     arrayItinerarios.add(viewIti);
-    setState(() {
-      
-    });
+    setState(() {});
   }
 
   void transformarJson(List<dynamic> lista, int id) {
@@ -180,9 +175,7 @@ class _CState extends State<GestionarItinerario> {
 
     print("tamaño de la lista es: ${arrayItinerarios.length}");
     print("${arrayItinerarios[0].source}");
-    setState(() {
-      
-    });    
+    setState(() {});
   }
 
   int getIdObject(String value, List<dynamic> lista) {
@@ -552,11 +545,11 @@ class _CState extends State<GestionarItinerario> {
           columns: [
             DataColumn(label: Text('id')),
             DataColumn(label: Text('Origen')),
-            DataColumn(label: Text('Aeropuerto.dart')),
+            DataColumn(label: Text('Aeropuerto')),
             DataColumn(label: Text('Fecha salida')),
             DataColumn(label: Text('Hora salida')),
             DataColumn(label: Text('Destino')),
-            DataColumn(label: Text('Aeropuerto.dart')),
+            DataColumn(label: Text('Aeropuerto')),
             DataColumn(label: Text('Fecha salida')),
             DataColumn(label: Text('Hora salida')),
           ],

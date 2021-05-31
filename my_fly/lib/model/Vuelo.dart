@@ -1,16 +1,16 @@
+import 'package:my_fly/model/Itinerario.dart';
+
+import 'Avion.dart';
+
 class Vuelo {
   String id;
-  String avion;
-  String itinerario;
-  String finalizado;
-  String precio;
+  Avion avion;
+  Itinerario itinerario;
+  bool finalizado;
+  int precio;
 
-  Vuelo(
-      String id,
-      String avion,
-      String itinerario,
-      String finalizado,
-      String precio) {
+  Vuelo(String id, Avion avion, Itinerario itinerario, bool finalizado,
+      int precio) {
     this.id = id;
     this.avion = avion;
     this.finalizado = finalizado;
@@ -18,35 +18,35 @@ class Vuelo {
     this.precio = precio;
   }
 
-  String getAvion() {
+  Avion getAvion() {
     return this.avion;
   }
 
-  setAvion(String avion) {
+  setAvion(Avion avion) {
     this.avion = avion;
   }
 
-  String geItinerario() {
-    return this.avion;
+  Itinerario geItinerario() {
+    return this.itinerario;
   }
 
-  setItinerario(String avion) {
-    this.avion = avion;
+  setItinerario(Itinerario itinerario) {
+    this.itinerario = itinerario;
   }
 
-  String getFinalizado() {
-    return this.avion;
+  bool getFinalizadngo() {
+    return this.finalizado;
   }
 
-  setFinalizado(String avion) {
-    this.avion = avion;
+  setFinalizado(bool finalizado) {
+    this.finalizado = finalizado;
   }
 
-  String getPrecio() {
-    return this.avion;
+  int getPrecio() {
+    return this.precio;
   }
 
-  setPrecio(String avion) {
-    this.avion = avion;
+  setPrecio(int precio) {
+    this.precio = precio;
   }
 }

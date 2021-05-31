@@ -1,62 +1,351 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 //libreria http para realizar consultas a internet
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'package:my_fly/model/Avion.dart';
+import 'package:my_fly/model/Ciudad.dart';
+import 'package:my_fly/model/Pais.dart';
 import 'dart:convert';
 
-//import 'model/ParseJson.dart';
+import 'package:my_fly/model/Vuelo.dart';
+import 'package:my_fly/view/ViewItinerario.dart';
 
-class GestionarVuelo extends StatelessWidget {
+class GestionarVuelo extends StatefulWidget {
+  @override
+  _GestionarVueloState createState() => _GestionarVueloState();
+}
+
+class _GestionarVueloState extends State<GestionarVuelo> {
+  TextEditingController txtItinerario = new TextEditingController();
+  TextEditingController txtAvion = new TextEditingController();
+  TextEditingController txtPrecio = new TextEditingController();
+  List<ViewItinerario> arrayItinerarios = [];
+  List<int> arrayPrecios = [373250, 746500, 1119750, 1493000, 1866250];
+  List<String> preciosString = [
+    '373,250',
+    '746,500',
+    '1,119,750',
+    '1,493,000',
+    '1,866,250'
+  ];
+  int precios = 0;
+  List<Avion> arrayAviones = [];
+  var precioValue = 'Seleccionar precio';
+
+  Future getAviones() async {
+    Avion avion;
+    final response =
+        await http.get(Uri.parse('http://localhost:8080/api/avion'));
+    var data = json.decode(response.body);
+
+    for (var i in data) {
+      avion = new Avion(i['id'], i['numero'], i['aerolinias']);
+
+      arrayAviones.add(avion);
+    }
+
+    print("tamaño de la lista aviones: ${arrayItinerarios.length}");
+    setState(() {});
+  }
+
+  Future getItinerarios() async {
+    ViewItinerario viewItinerario;
+    final response =
+        await http.get(Uri.parse('http://localhost:8080/api/itinerario'));
+    var data = json.decode(response.body);
+    print("$data");
+    for (var i in data) {
+      print(" el aeropuerto fue: ${i['puertoOrigen']['nombre']}");
+
+      viewItinerario = new ViewItinerario(
+          i['id'],
+          i['origen'],
+          i['puertoOrigen']['nombre'],
+          DateFormat('y-MM-d').format(DateTime.parse(i['fechaSalida'])),
+          i['horaSalida'],
+          i['destino'],
+          i['puertoDestino']['nombre'],
+          DateFormat('y-MM-d').format(DateTime.parse(i['fechaLlegada'])),
+          i['horaLlegada']);
+
+      print("el objeto view: ${viewItinerario.id}, ${viewItinerario.source}");
+      arrayItinerarios.add(viewItinerario);
+    }
+
+    print("tamaño de la lista es: ${arrayItinerarios.length}");
+    print("${arrayItinerarios[0].source}");
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getItinerarios();
+    getAviones();
+  }
+
+  Future guardarVuelo(Vuelo vuelo) async {
+    var body = json.encode({
+      "itinerario": {
+        "id": vuelo.itinerario.id,
+        "origen": vuelo.itinerario.origen,
+        "puertoOrigen": {
+          "id": vuelo.itinerario.puertoOrigen.id,
+          "nombre": vuelo.itinerario.puertoOrigen.nombre,
+          "ciudad": {
+            "id": vuelo.itinerario.puertoOrigen.ciudad.id,
+            "nombre": vuelo.itinerario.puertoOrigen.ciudad.nombre,
+            "pais": {
+              "id": vuelo.itinerario.puertoOrigen.ciudad.pais.id,
+              "nombre": vuelo.itinerario.puertoOrigen.ciudad.pais.nombre,
+            },
+          },
+        },
+        "fechaSalida": vuelo.itinerario.fechaSalida,
+        "horaSalida": vuelo.itinerario.horaSalida,
+        "destino": vuelo.itinerario.destino,
+        "puertoDestino": {
+          "id": vuelo.itinerario.puertoDestino.id,
+          "nombre": vuelo.itinerario.puertoDestino.nombre,
+          "ciudad": {
+            "id": vuelo.itinerario.puertoDestino.ciudad.id,
+            "nombre": vuelo.itinerario.puertoDestino.ciudad.nombre,
+            "pais": {
+              "id": vuelo.itinerario.puertoDestino.ciudad.pais.id,
+              "nombre": vuelo.itinerario.puertoDestino.ciudad.pais.nombre,
+            },
+          },
+        },
+        "fechaLlegada": vuelo.itinerario.fechaLlegada,
+        "horaLlegada": vuelo.itinerario.fechaLlegada,
+      },
+      "avion": {
+        "id": vuelo.avion.id,
+        "numero": vuelo.avion.numero,
+        "aerolinias": vuelo.avion.aerolinias
+      },
+      "finalizado": null,
+      "precio": vuelo.precio
+    });
+
+    final response = await http
+        .post(Uri.parse('http://localhost:8080/api/vuelo'), body: body);
+
+    var data = json.decode(response.body);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return GestionarAvionState();
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Gestionar Vuelo'),
+      ),
+      body: SingleChildScrollView(
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 100.0, top: 20.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Padding(
+                      child: Text('Itinerarios'), padding: EdgeInsets.all(14)),
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Container(
+                      width: 500.0,
+                      height: 255.0,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.grey.withOpacity(0.5),
+                                spreadRadius: 5,
+                                blurRadius: 7,
+                                offset: Offset(0, 3))
+                          ]),
+                      child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: SingleChildScrollView(
+                            child: (arrayItinerarios.length >= 1)
+                                ? buildTableItinerarios()
+                                : CircularProgressIndicator(),
+                          )),
+                    ),
+                  ),
+                  Padding(child: Text('Aviones'), padding: EdgeInsets.all(8)),
+                  Container(
+                      margin: EdgeInsets.only(left: 70.0),
+                      width: 320.0,
+                      height: 200.0,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.grey.withOpacity(0.5),
+                                spreadRadius: 5,
+                                blurRadius: 7,
+                                offset: Offset(0, 3))
+                          ]),
+                      child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: SingleChildScrollView(
+                            child: (arrayItinerarios.length >= 1)
+                                ? buildTableAviones()
+                                : CircularProgressIndicator(),
+                          )))
+                ],
+              ),
+            ),
+            Container(
+              margin: EdgeInsets.only(left: 100.0),
+              width: 300.0,
+              height: 500.0,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                      child: Text('Itinerarios'), padding: EdgeInsets.all(14)),
+                  CupertinoTextField(
+                    controller: txtItinerario,
+                    placeholder: 'Seleccione en la tabla el id deseado.',
+                    readOnly: true,
+                    textAlign: TextAlign.center,
+                  ),
+                  Padding(child: Text('Aviones'), padding: EdgeInsets.all(14)),
+                  CupertinoTextField(
+                    controller: txtAvion,
+                    placeholder: 'Seleccione en la tabla el id deseado.',
+                    readOnly: true,
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(
+                    height: 30.0,
+                  ),
+                  DropdownButton<String>(
+                    hint: Text('$precioValue'),
+                    icon: const Icon(Icons.arrow_downward),
+                    iconSize: 24,
+                    elevation: 16,
+                    style: const TextStyle(color: Colors.blueAccent),
+                    underline: Container(
+                      height: 2,
+                      color: Colors.blue[900],
+                    ),
+                    onChanged: (String newValue) {
+                      setState(() {
+                        precioValue = newValue;
+                        parceValueInt(newValue);
+                      });
+                    },
+                    items: preciosString.map<DropdownMenuItem<String>>((value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text("$value cop"),
+                      );
+                    }).toList(),
+                  ),
+                  SizedBox(
+                    height: 30.0,
+                  ),
+                  CupertinoButton(
+                      child: Text('Guardar'),
+                      color: Colors.blueAccent,
+                      onPressed: () {})
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  DataTable buildTableItinerarios() {
+    return DataTable(
+        columns: [
+          DataColumn(label: Text('id'), tooltip: 'seleccione el id '),
+          DataColumn(label: Text('Origen')),
+          DataColumn(label: Text('Aeropuerto')),
+          DataColumn(label: Text('Fecha salida')),
+          DataColumn(label: Text('Hora salida')),
+          DataColumn(label: Text('Destino')),
+          DataColumn(label: Text('Aeropuerto')),
+          DataColumn(label: Text('Fecha salida')),
+          DataColumn(label: Text('Hora salida')),
+        ],
+        rows: arrayItinerarios
+            .map((e) => DataRow(cells: [
+                  DataCell(Text('${e.id}'), onTap: () {
+                    setState(() {
+                      txtItinerario.text = e.id.toString();
+                    });
+                  }),
+                  DataCell(
+                    Text('${e.source}'),
+                  ),
+                  DataCell(
+                    Text('${e.namePort}'),
+                  ),
+                  DataCell(
+                    Text('${e.starDate}'),
+                  ),
+                  DataCell(
+                    Text('${e.startTime}'),
+                  ),
+                  DataCell(
+                    Text('${e.destiny}'),
+                  ),
+                  DataCell(
+                    Text('${e.namePortEnd}'),
+                  ),
+                  DataCell(
+                    Text('${e.endDate}'),
+                  ),
+                  DataCell(
+                    Text('${e.endTime}'),
+                  ),
+                ]))
+            .toList());
+  }
+
+  DataTable buildTableAviones() {
+    return DataTable(
+        columns: [
+          DataColumn(label: Text('id')),
+          DataColumn(label: Text('Aerolinias')),
+          DataColumn(label: Text('Numero avión')),
+        ],
+        rows: arrayAviones
+            .map((e) => DataRow(cells: [
+                  DataCell(Text('${e.id}'), onTap: () {
+                    setState(() {
+                      txtAvion.text = e.id.toString();
+                    });
+                  }),
+                  DataCell(
+                    Text('${e.aerolinias}'),
+                  ),
+                  DataCell(
+                    Text('${e.numero}'),
+                  )
+                ]))
+            .toList());
+  }
+
+  void parceValueInt(String value) {
+    int id = 0;
+
+    for (var i = 0; i < preciosString.length; i++) {
+      if (preciosString[i] == value) {
+        id = i;
+      }
+    }
+
+    precios = arrayPrecios[id];
+    print("el precio seleciona fue: $precios");
   }
 }
-
-Future obtenerU() async {
-  print("se ejecutó");
-
-  //indicar que el http es cliente
-  var httpClient = http.Client();
-
-  Uri request = Uri.parse('http://localhost/restful_php/');
-  //has una peticion http
-  http.Response response = await httpClient.get(request, headers: {'Content-type':'application/json'});
-  Map parseData = await json.decode(response.body);
-
-  print('el nombre es: ${parseData['nombre']}');
-
-  //final resp = await http.get(Uri.parse('http://reqres.in/api/users'));
-
-  /*obtengo el json
-  var list = await json.decode(resp.body).cast<Map<String, dynamic>>();
-
-  //transforma Json a modelo
-  lista =
-      await list.map<Response>((json) => new Response.fromJson(json)).toList();
-
-  print('este es el dato ${lista[0].page}');
-  
-
-  return Future.delayed(Duration(seconds: 1), () => 'Hola mundo');
-  */
-}
-
-class GestionarAvionState extends StatefulWidget {
-  GestionarAvionState({Key key}) : super(key: key);
-
-  @override
-  _GestionarAvionStateState createState() => _GestionarAvionStateState();
-}
-
-class _GestionarAvionStateState extends State<GestionarAvionState> {
-  @override
-  Widget build(BuildContext context) {
-    
-    throw UnimplementedError();
-  }
-}
-
- 
-
-
-  

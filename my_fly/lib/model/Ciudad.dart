@@ -1,7 +1,6 @@
 import 'Pais.dart';
 
 class Ciudad {
-
   int _id;
   String _nombre;
   Pais _pais;
