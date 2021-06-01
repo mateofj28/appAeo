@@ -21,6 +21,17 @@ class Itinerario {
       this._fechaLlegada,
       this._horaLlegada);
 
+  Itinerario.id(
+      this._id,
+      this._origen,
+      this._puertoOrigen,
+      this._fechaSalida,
+      this._horaSalida,
+      this._destino,
+      this._puertoDestino,
+      this._fechaLlegada,
+      this._horaLlegada);
+
   int get id => _id;
   String get horaLlegada => _horaLlegada;
 

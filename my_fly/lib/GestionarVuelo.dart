@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 //libreria http para realizar consultas a internet
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:my_fly/model/Aeropuerto.dart';
 import 'package:my_fly/model/Avion.dart';
 import 'package:my_fly/model/Ciudad.dart';
 import 'package:my_fly/model/Pais.dart';
@@ -10,6 +11,8 @@ import 'dart:convert';
 
 import 'package:my_fly/model/Vuelo.dart';
 import 'package:my_fly/view/ViewItinerario.dart';
+
+import 'model/Itinerario.dart';
 
 class GestionarVuelo extends StatefulWidget {
   @override
@@ -32,6 +35,8 @@ class _GestionarVueloState extends State<GestionarVuelo> {
   int precios = 0;
   List<Avion> arrayAviones = [];
   var precioValue = 'Seleccionar precio';
+  Avion avion;
+  Itinerario itinerario;
 
   Future getAviones() async {
     Avion avion;
@@ -133,6 +138,52 @@ class _GestionarVueloState extends State<GestionarVuelo> {
         .post(Uri.parse('http://localhost:8080/api/vuelo'), body: body);
 
     var data = json.decode(response.body);
+    print('el vuelo fue: $data');
+  }
+
+  Future getDataItinerario(String id) async {
+    final response = await http
+        .get(Uri.parse('http://localhost:8080/api/itinerario/id?id=$id'));
+
+    var data = json.decode(response.body);
+
+    var paisSalida = new Pais(data['puertoOrigen']['ciudad']['pais']['id'],
+        data['puertoOrigen']['ciudad']['pais']['nombre']);
+
+    var ciudadSalida = new Ciudad(data['puertoOrigen']['ciudad']['id'],
+        data['puertoOrigen']['ciudad']['id'], paisSalida);
+
+    Aeropuerto puertoSalida = new Aeropuerto(data['puertoOrigen']['id'],
+        data['puertoOrigen']['nombre'], ciudadSalida);
+
+    var paisLlegada = new Pais(data['puertoDestino']['ciudad']['pais']['id'],
+        data['puertoDestino']['ciudad']['pais']['nombre']);
+
+    var ciudadLlegada = new Ciudad(data['puertoDestino']['ciudad']['id'],
+        data['puertoDestino']['ciudad']['id'], paisLlegada);
+
+    Aeropuerto puertoLlegada = new Aeropuerto(data['puertoDestino']['id'],
+        data['puertoDestino']['nombre'], ciudadLlegada);
+
+    itinerario = new Itinerario.id(
+        data['id'],
+        data['origen'],
+        puertoSalida,
+        data['fechaSalida'],
+        data['horaSalida'],
+        data['destino'],
+        puertoLlegada,
+        data['fechaLlegada'],
+        data['horaLlegada']);
+  }
+
+  Future getDataAviones(String id) async {
+    final response =
+        await http.get(Uri.parse('http://localhost:8080/api/avion/id?id=$id'));
+
+    var data = json.decode(response.body);
+
+    avion = new Avion(data['id'], data['numero'], data['aerolinias']);
   }
 
   @override
@@ -254,7 +305,13 @@ class _GestionarVueloState extends State<GestionarVuelo> {
                   CupertinoButton(
                       child: Text('Guardar'),
                       color: Colors.blueAccent,
-                      onPressed: () {})
+                      onPressed: () {
+                        setState(() {
+                          Vuelo vuelo =
+                              new Vuelo.id(avion, itinerario, null, precios);
+                          guardarVuelo(vuelo);
+                        });
+                      })
                 ],
               ),
             )

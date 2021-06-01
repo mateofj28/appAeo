@@ -1,5 +1,4 @@
 class ViewItinerario {
-
   int _id;
   String _namePort, _namePortEnd, _source, _destiny, _startTime, _endTime;
   String _starDate, _endDate;
@@ -13,8 +12,7 @@ class ViewItinerario {
       this._destiny,
       this._namePortEnd,
       this._endDate,
-      this._endTime
-      );
+      this._endTime);
 
   get endDate => _endDate;
 
