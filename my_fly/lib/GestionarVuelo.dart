@@ -50,7 +50,6 @@ class _GestionarVueloState extends State<GestionarVuelo> {
       arrayAviones.add(avion);
     }
 
-    print("tamaño de la lista aviones: ${arrayItinerarios.length}");
     setState(() {});
   }
 
@@ -59,10 +58,8 @@ class _GestionarVueloState extends State<GestionarVuelo> {
     final response =
         await http.get(Uri.parse('http://localhost:8080/api/itinerario'));
     var data = json.decode(response.body);
-    print("$data");
-    for (var i in data) {
-      print(" el aeropuerto fue: ${i['puertoOrigen']['nombre']}");
 
+    for (var i in data) {
       viewItinerario = new ViewItinerario(
           i['id'],
           i['origen'],
@@ -74,12 +71,9 @@ class _GestionarVueloState extends State<GestionarVuelo> {
           DateFormat('y-MM-d').format(DateTime.parse(i['fechaLlegada'])),
           i['horaLlegada']);
 
-      print("el objeto view: ${viewItinerario.id}, ${viewItinerario.source}");
       arrayItinerarios.add(viewItinerario);
     }
 
-    print("tamaño de la lista es: ${arrayItinerarios.length}");
-    print("${arrayItinerarios[0].source}");
     setState(() {});
   }
 
@@ -91,7 +85,11 @@ class _GestionarVueloState extends State<GestionarVuelo> {
   }
 
   Future guardarVuelo(Vuelo vuelo) async {
-    var body = json.encode({
+    print(
+        'el vuelo se creo ${vuelo.itinerario.fechaSalida}, ${vuelo.precio}, ${vuelo.itinerario.id}, ${vuelo.avion.id}');
+    print('es malo?');
+
+    final body = json.encode({
       "itinerario": {
         "id": vuelo.itinerario.id,
         "origen": vuelo.itinerario.origen,
@@ -103,11 +101,12 @@ class _GestionarVueloState extends State<GestionarVuelo> {
             "nombre": vuelo.itinerario.puertoOrigen.ciudad.nombre,
             "pais": {
               "id": vuelo.itinerario.puertoOrigen.ciudad.pais.id,
-              "nombre": vuelo.itinerario.puertoOrigen.ciudad.pais.nombre,
-            },
-          },
+              "nombre": vuelo.itinerario.puertoOrigen.ciudad.pais.nombre
+            }
+          }
         },
-        "fechaSalida": vuelo.itinerario.fechaSalida,
+        "fechaSalida":
+            DateFormat('y-MM-d').format(vuelo.itinerario.fechaSalida),
         "horaSalida": vuelo.itinerario.horaSalida,
         "destino": vuelo.itinerario.destino,
         "puertoDestino": {
@@ -118,12 +117,12 @@ class _GestionarVueloState extends State<GestionarVuelo> {
             "nombre": vuelo.itinerario.puertoDestino.ciudad.nombre,
             "pais": {
               "id": vuelo.itinerario.puertoDestino.ciudad.pais.id,
-              "nombre": vuelo.itinerario.puertoDestino.ciudad.pais.nombre,
-            },
-          },
+              "nombre": vuelo.itinerario.puertoDestino.ciudad.pais.nombre
+            }
+          }
         },
-        "fechaLlegada": vuelo.itinerario.fechaLlegada,
-        "horaLlegada": vuelo.itinerario.fechaLlegada,
+        "fechaLlegada": DateFormat('y-MM-d').format(vuelo.itinerario.fechaLlegada),
+        "horaLlegada": vuelo.itinerario.horaLlegada,
       },
       "avion": {
         "id": vuelo.avion.id,
@@ -134,11 +133,18 @@ class _GestionarVueloState extends State<GestionarVuelo> {
       "precio": vuelo.precio
     });
 
-    final response = await http
-        .post(Uri.parse('http://localhost:8080/api/vuelo'), body: body);
+    print('el json paso $body');
 
+    final response = await http.post(
+        Uri.parse('http://localhost:8080/api/vuelo'),
+        body: body,
+        headers: {
+          'Content-Type': 'application/json',
+        });
+
+    print('se mando la data ${response.statusCode}');
     var data = json.decode(response.body);
-    print('el vuelo fue: $data');
+    print('el vuelo fue: $data bien!!');
   }
 
   Future getDataItinerario(String id) async {
@@ -151,7 +157,7 @@ class _GestionarVueloState extends State<GestionarVuelo> {
         data['puertoOrigen']['ciudad']['pais']['nombre']);
 
     var ciudadSalida = new Ciudad(data['puertoOrigen']['ciudad']['id'],
-        data['puertoOrigen']['ciudad']['id'], paisSalida);
+        data['puertoOrigen']['ciudad']['nombre'], paisSalida);
 
     Aeropuerto puertoSalida = new Aeropuerto(data['puertoOrigen']['id'],
         data['puertoOrigen']['nombre'], ciudadSalida);
@@ -160,7 +166,7 @@ class _GestionarVueloState extends State<GestionarVuelo> {
         data['puertoDestino']['ciudad']['pais']['nombre']);
 
     var ciudadLlegada = new Ciudad(data['puertoDestino']['ciudad']['id'],
-        data['puertoDestino']['ciudad']['id'], paisLlegada);
+        data['puertoDestino']['ciudad']['nombre'], paisLlegada);
 
     Aeropuerto puertoLlegada = new Aeropuerto(data['puertoDestino']['id'],
         data['puertoDestino']['nombre'], ciudadLlegada);
@@ -169,12 +175,14 @@ class _GestionarVueloState extends State<GestionarVuelo> {
         data['id'],
         data['origen'],
         puertoSalida,
-        data['fechaSalida'],
+        DateTime.parse(data['fechaSalida']),
         data['horaSalida'],
         data['destino'],
         puertoLlegada,
-        data['fechaLlegada'],
+        DateTime.parse(data['fechaLlegada']),
         data['horaLlegada']);
+
+    print("el itinerario se creo satisfactoriamente");
   }
 
   Future getDataAviones(String id) async {
@@ -184,6 +192,7 @@ class _GestionarVueloState extends State<GestionarVuelo> {
     var data = json.decode(response.body);
 
     avion = new Avion(data['id'], data['numero'], data['aerolinias']);
+    print('el avion se guardo');
   }
 
   @override
@@ -339,6 +348,7 @@ class _GestionarVueloState extends State<GestionarVuelo> {
                   DataCell(Text('${e.id}'), onTap: () {
                     setState(() {
                       txtItinerario.text = e.id.toString();
+                      getDataItinerario(txtItinerario.text);
                     });
                   }),
                   DataCell(
@@ -381,6 +391,7 @@ class _GestionarVueloState extends State<GestionarVuelo> {
                   DataCell(Text('${e.id}'), onTap: () {
                     setState(() {
                       txtAvion.text = e.id.toString();
+                      getDataAviones(txtAvion.text);
                     });
                   }),
                   DataCell(
@@ -403,6 +414,19 @@ class _GestionarVueloState extends State<GestionarVuelo> {
     }
 
     precios = arrayPrecios[id];
-    print("el precio seleciona fue: $precios");
   }
 }
+/**
+ * {
+ * "itinerario"
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * }
+ * 
+ * 
+ * 
+ */
