@@ -6,8 +6,10 @@ import 'package:my_fly/GestionarItinerario.dart';
 import 'package:my_fly/GestionarVuelo.dart';
 import 'package:my_fly/ObtenerDetalleSillaVuelo.dart';
 import 'package:http/http.dart' as http;
+import 'package:my_fly/view/ViewVuelo.dart';
 
 import 'model/Pasajero.dart';
+
 
 void main() {
   runApp(MyApp());
@@ -19,7 +21,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'AirCol',
-      theme: ThemeData.fallback(),
+      theme: ThemeData.light(),
       home: MyHomePage(title: 'Home'),
     );
   }
@@ -53,76 +55,58 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    print("el valor es: $signRoot");
-    print('el valor del usuario empezo en: $startSign');
-    print(signRoot == false);
+    List<Color> _fill = <Color>[
+      Colors.grey[200],
+      Color(0xFFf8fbf8),
+      Colors.white
+    ];
 
     return Scaffold(
-        appBar: AppBar(title: Text(widget.title), actions: <Widget>[
-          if (startSign == false)
-            Container(
-              padding: EdgeInsets.all(6.0),
-              child: ElevatedButton(
-                  style: ButtonStyle(
-                    backgroundColor:
-                        MaterialStateProperty.all<Color>(Colors.blue[900]),
-                  ),
-                  onPressed: () {
-                    iniciarSesion();
-                  },
-                  child: Text('Iniciar sesión')),
-            ),
-          if (startSign == false)
-            Container(
-              padding: EdgeInsets.all(6.0),
-              width: 130.0,
-              child: ElevatedButton(
-                  style: ButtonStyle(
-                    backgroundColor:
-                        MaterialStateProperty.all<Color>(Colors.green[900]),
-                  ),
-                  onPressed: showDialoSave,
-                  child: Text('Registrarse')),
-            ),
-        ]),
-        drawer: Drawer(
-            child: SingleChildScrollView(
-                child: Column(
-          children: [
-            DrawerHeader(
-                child: Container(
-                    width: double.maxFinite,
-                    child: Column(children: [
-                      Text("Header drawer", style: TextStyle(fontSize: 10)),
-                      SizedBox(height: 10),
-                      Text("Subtitle"),
-                      SizedBox(height: 10),
-                      ElevatedButton(
-                          onPressed: () {}, child: Text("presioname"))
-                    ])),
-                decoration: BoxDecoration(color: Colors.indigo)),
-            if (signRoot == true)
-              ListTile(
-                  title: Text("Gestionar itinerario"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => GestionarItinerario()));
-                  }),
-            if (signRoot == true)
-              ListTile(
-                  title: Text("Gestionar vuelo"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => GestionarVuelo()));
-                  }),
+      appBar: AppBar(title: Text(widget.title), actions: <Widget>[
+        if (startSign == false)
+          Container(
+            padding: EdgeInsets.all(6.0),
+            child: ElevatedButton(
+                style: ButtonStyle(
+                  backgroundColor:
+                      MaterialStateProperty.all<Color>(Colors.blue[900]),
+                ),
+                onPressed: () {
+                  iniciarSesion();
+                },
+                child: Text('Iniciar sesión')),
+          ),
+        if (startSign == false)
+          Container(
+            padding: EdgeInsets.all(6.0),
+            width: 130.0,
+            child: ElevatedButton(
+                style: ButtonStyle(
+                  backgroundColor:
+                      MaterialStateProperty.all<Color>(Colors.green[900]),
+                ),
+                onPressed: showDialoSave,
+                child: Text('Registrarse')),
+          ),
+      ]),
+      drawer: Drawer(
+          child: SingleChildScrollView(
+              child: Column(
+        children: [
+          DrawerHeader(
+              child: Container(
+                  width: double.maxFinite,
+                  child: Column(children: [
+                    Text("Header drawer", style: TextStyle(fontSize: 10)),
+                    SizedBox(height: 10),
+                    Text("Subtitle"),
+                    SizedBox(height: 10),
+                    ElevatedButton(onPressed: () {}, child: Text("presioname"))
+                  ])),
+              decoration: BoxDecoration(color: Colors.indigo)),
+          if (startSign == false && signRoot == true)
             ListTile(
-                title: Text("Gestionar mis datos"),
+                title: Text("Gestionar itinerario"),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -130,59 +114,116 @@ class _MyHomePageState extends State<MyHomePage> {
                       MaterialPageRoute(
                           builder: (context) => GestionarItinerario()));
                 }),
-            if (signRoot == false)
-              ListTile(
-                  title: Text("Historial"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => GestionarItinerario()));
-                  }),
+          if (startSign == false && signRoot == true)
             ListTile(
-                title: Text("Cerrar sesión"),
+                title: Text("Gestionar vuelo"),
                 onTap: () {
-                  setState(() {
-                    startSign = false;
-                  });
                   Navigator.pop(context);
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => GestionarVuelo()));
                 }),
-          ],
-        ))),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            child: Container(
-              width: double.maxFinite,
-              height: 400.0,
-              decoration: BoxDecoration(color: Colors.blue[50]),
-              child: Center(
-                child: Column(
-                  //espacio pequeño y apropiado
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Text('title',
-                        style: CupertinoTheme.of(context)
-                            .textTheme
-                            .navLargeTitleTextStyle),
-                    Text('descripcion', style: TextStyle(fontSize: 20.0)),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _card("España, madrid",
-                            Icons.account_balance_wallet_sharp, "100"),
-                        _card("Francia, paris", Icons.access_alarm_outlined,
-                            "1200"),
-                        _card("Italia, roma", Icons.zoom_in_rounded, "800"),
-                        _card("Colombia, barranquilla", Icons.adb_sharp, "90"),
-                      ],
-                    )
-                  ],
-                ),
+          ListTile(
+              title: Text("Gestionar mis datos"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => GestionarItinerario()));
+              }),
+          if (startSign == false && signRoot == true)
+            ListTile(
+                title: Text("Historial"),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => GestionarItinerario()));
+                }),
+          ListTile(
+              title: Text("Cerrar sesión"),
+              onTap: () {
+                setState(() {
+                  startSign = false;
+                });
+                Navigator.pop(context);
+              }),
+        ],
+      ))),
+      body: SafeArea(
+          child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Center(
+            child: Text('Hola mundo',
+                style: CupertinoTheme.of(context)
+                    .textTheme
+                    .actionTextStyle
+                    .copyWith(fontSize: 20)),
+          ),
+          Container(
+            width: 700.0,
+            height: 500.0,
+            child: FutureBuilder<List<ViewVuelo>>(
+              future: findVuelos(), // async work
+              builder: (BuildContext context,
+                  AsyncSnapshot<List<ViewVuelo>> snapshot) {
+                switch (snapshot.connectionState) {
+                  case ConnectionState.waiting:
+                    return Text('Loading....');
+                  default:
+                    return Text('Result: ${snapshot.data[0].id}');
+                  /*if (snapshot.hasError) {
+                      print('Error: ${snapshot.error}');
+                      return Text('Error: ${snapshot.error}');
+                    } else {
+                      
+                    }*/
+                }
+              },
+            ),
+            decoration: BoxDecoration(
+              color: Color(0xFF649166),
+              //  border: Border.fromBorderSide(BorderSide(style: BorderStyle.solid,width: 3.0,color: Color(0xFFF8F1F1))),
+              borderRadius: BorderRadius.all(Radius.circular(30)),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: _fill,
+                stops: [0.1, 0.5, 0.9],
               ),
             ),
-          ),
-        ));
+          )
+        ],
+      )),
+    );
+  }
+
+  Future<List<ViewVuelo>> findVuelos() async {
+    ViewVuelo vuelo;
+    List<ViewVuelo> arrayViewVuelos;
+
+    final response =
+        await http.get(Uri.parse('http://localhost:8080/api/vuelo'));
+
+    var data = json.decode(response.body);
+
+    if (response.statusCode == 200) {
+      print('${data[0]['id']}');
+    }
+
+    print('$data');
+
+    for (var i in data) {
+      vuelo = new ViewVuelo(i['id'], i['itinerario']['destino'], i['precio']);
+      print('${vuelo.destino}, ${vuelo.id}, ${vuelo.precio}');
+      arrayViewVuelos.add(vuelo);
+    }
+    print('todo esta bien!');
+    return arrayViewVuelos;
   }
 
   void gestionarDetalleSilla() {
@@ -240,7 +281,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           print("Inicio sesion el admin");
                         } else {
                           getPasajero(txtCorreo, txtContrasena);
-                        }                       
+                        }
                         Navigator.of(context).pop();
                       });
                     },
@@ -340,7 +381,6 @@ class _MyHomePageState extends State<MyHomePage> {
                             txtCorreo.text,
                             txtContrasena.text);
 
-                        print('el objeto fue ${pasajero.nombre}');
                         savePasajero(pasajero);
                         txtCorreo.text = "";
                         txtContrasena.text = "";
@@ -362,9 +402,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final response = await http.get(Uri.parse(uri));
     var data = json.decode(response.body);
 
-    print('$data');
-    print("los datos fueron ${correo.text}, ${contrasena.text}");
-    if (data['correo'] == correo.text && data['password'] == contrasena.text) {      
+    if (data['correo'] == correo.text && data['password'] == contrasena.text) {
       setState(() {
         signRoot = false;
         startSign = true;
@@ -399,12 +437,11 @@ class _MyHomePageState extends State<MyHomePage> {
       'Content-Type': 'application/json',
     });
 
-    print(response.statusCode);
     var data = json.decode(response.body);
     print('${data['id']}');
   }
 
-  /* crear card*/
+  /* crear card
   Widget _card(String title, IconData icon, String price) => Container(
       child: SizedBox(
           height: 200,
@@ -426,7 +463,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     },
                     child: Text("Comprar"))
               ]))));
-
+*/
 /**
  */
 }

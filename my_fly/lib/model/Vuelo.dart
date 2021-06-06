@@ -9,21 +9,15 @@ class Vuelo {
   bool finalizado;
   int precio;
 
-
-  Vuelo.id(
-    Avion avion, 
-    Itinerario itinerario, 
-    bool finalizado,
-    int precio) {
-          
+  Vuelo.id(Avion avion, Itinerario itinerario, bool finalizado, int precio) {
     this.avion = avion;
     this.finalizado = finalizado;
     this.itinerario = itinerario;
     this.precio = precio;
   }
 
-  Vuelo(int id, Avion avion, Itinerario itinerario, bool finalizado,
-      int precio) {
+  Vuelo(
+      int id, Avion avion, Itinerario itinerario, bool finalizado, int precio) {
     this.id = id;
     this.avion = avion;
     this.finalizado = finalizado;
