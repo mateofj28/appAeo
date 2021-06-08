@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:my_fly/GestionarItinerario.dart';
 import 'package:my_fly/GestionarVuelo.dart';
 import 'package:my_fly/ObtenerDetalleSillaVuelo.dart';
@@ -20,7 +21,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'AirCol',
-      theme: ThemeData.light(),
+      theme: ThemeData(
+        primaryColor: Color(0xFFFFCE2C)
+      ),
       home: MyHomePage(title: 'Home'),
     );
   }
@@ -100,6 +103,8 @@ class _MyHomePageState extends State<MyHomePage> {
   TextEditingController txtContrasena = new TextEditingController();
   List<ViewVuelo> arrayVuelos = [];
 
+  var nameUser  = '', mailUser = '';
+
   String _admin = "root";
   bool signRoot = false;
   bool startSign = false;
@@ -127,7 +132,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: ElevatedButton(
                 style: ButtonStyle(
                   backgroundColor:
-                      MaterialStateProperty.all<Color>(Colors.blue[900]),
+                      MaterialStateProperty.all<Color>(Color(0xFFFF4762)),
                 ),
                 onPressed: () {
                   iniciarSesion();
@@ -141,7 +146,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: ElevatedButton(
                 style: ButtonStyle(
                   backgroundColor:
-                      MaterialStateProperty.all<Color>(Colors.green[900]),
+                      MaterialStateProperty.all<Color>(Color(0xFF64AAFF)),
                 ),
                 onPressed: showDialoSave,
                 child: Text('Registrarse')),
@@ -154,15 +159,16 @@ class _MyHomePageState extends State<MyHomePage> {
           DrawerHeader(
               child: Container(
                   width: double.maxFinite,
-                  child: Column(children: [
-                    Text("Header drawer", style: TextStyle(fontSize: 10)),
-                    SizedBox(height: 10),
-                    Text("Subtitle"),
-                    SizedBox(height: 10),
-                    ElevatedButton(onPressed: () {}, child: Text("presioname"))
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Icon(Icons.account_circle),
+                        Text("Hello $nameUser", style: TextStyle(fontSize: 20)),
+                        Text('$mailUser'),
+                        //ElevatedButton(onPressed: () {}, child: Text("presioname"))
                   ])),
-              decoration: BoxDecoration(color: Colors.indigo)),
-          if (startSign == false && signRoot == true)
+              decoration: BoxDecoration(color: Color(0xFFFFCE2C))),
+          if (signRoot == true)
             ListTile(
                 title: Text("Gestionar itinerario"),
                 onTap: () {
@@ -172,7 +178,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       MaterialPageRoute(
                           builder: (context) => GestionarItinerario()));
                 }),
-          if (startSign == false && signRoot == true)
+          if (signRoot == true)
             ListTile(
                 title: Text("Gestionar vuelo"),
                 onTap: () {
@@ -191,7 +197,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     MaterialPageRoute(
                         builder: (context) => GestionarItinerario()));
               }),
-          if (startSign == false && signRoot == true)
+          if (startSign == true)
             ListTile(
                 title: Text("Historial"),
                 onTap: () {
@@ -206,6 +212,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onTap: () {
                 setState(() {
                   startSign = false;
+                  signRoot = false;
                 });
                 Navigator.pop(context);
               }),
@@ -315,6 +322,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         if (txtCorreo.text == _admin) {
                           startSign = true;
                           signRoot = true;
+                          txtCorreo.text = "";
+                          txtContrasena.text = "";
                           print("Inicio sesion el admin");
                         } else {
                           getPasajero(txtCorreo, txtContrasena);
@@ -430,14 +439,19 @@ class _MyHomePageState extends State<MyHomePage> {
   /** metodo traer el objeto*/
   Future getPasajero(
       TextEditingController correo, TextEditingController contrasena) async {
+
     var uri = 'http://localhost:8080/api/pasajero?correo=${correo.text}';
+
     final response = await http.get(Uri.parse(uri));
+
     var data = json.decode(response.body);
 
     if (data['correo'] == correo.text && data['password'] == contrasena.text) {
       setState(() {
         signRoot = false;
         startSign = true;
+        nameUser = data['nombre'];
+        mailUser = data['correo'];
         txtCorreo.text = "";
         txtContrasena.text = "";
         print("Inicio sesion el usuario");
