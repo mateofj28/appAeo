@@ -10,7 +10,6 @@ import 'package:my_fly/view/ViewVuelo.dart';
 
 import 'model/Pasajero.dart';
 
-
 void main() {
   runApp(MyApp());
 }
@@ -24,6 +23,62 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.light(),
       home: MyHomePage(title: 'Home'),
     );
+  }
+}
+
+// ignore: must_be_immutable
+class CardItem extends StatefulWidget {
+  ViewVuelo vuelo;
+
+  CardItem(this.vuelo);
+
+  @override
+  _CardItemState createState() => _CardItemState();
+}
+
+class _CardItemState extends State<CardItem> {
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        print('${widget.vuelo.destino}');
+      },
+      child: Container(
+        width: 150.0,
+        child: Card(
+            elevation: 10.0,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Text('icono'),
+                Text('${widget.vuelo.destino}'),
+                Text('${widget.vuelo.precio}'),
+              ],
+            )),
+      ),
+    );
+  }
+}
+
+// ignore: must_be_immutable
+class ListCard extends StatefulWidget {
+  List<ViewVuelo> listaVuelos;
+  ListCard(this.listaVuelos);
+
+  @override
+  _ListCardState createState() => _ListCardState();
+}
+
+class _ListCardState extends State<ListCard> {
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.all(20),
+        itemCount: widget.listaVuelos.length,
+        itemBuilder: (BuildContext context, int index) {
+          return CardItem(widget.listaVuelos[index]);
+        });
   }
 }
 
@@ -43,15 +98,18 @@ class _MyHomePageState extends State<MyHomePage> {
   TextEditingController txtTelefono = new TextEditingController();
   TextEditingController txtCorreo = new TextEditingController();
   TextEditingController txtContrasena = new TextEditingController();
+  List<ViewVuelo> arrayVuelos = [];
 
   String _admin = "root";
   bool signRoot = false;
   bool startSign = false;
   bool notShowPass = true;
 
-  //flutter run -d chrome --web-port 51094
-  //Solicita iniciar seccion o registrarse --> AlertDialo
-  //metodo iniciar session
+  @override
+  // ignore: must_call_super
+  void initState() {
+    findVuelos();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,24 +224,11 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           Container(
             width: 700.0,
-            height: 500.0,
-            child: FutureBuilder<List<ViewVuelo>>(
-              future: findVuelos(), // async work
-              builder: (BuildContext context,
-                  AsyncSnapshot<List<ViewVuelo>> snapshot) {
-                switch (snapshot.connectionState) {
-                  case ConnectionState.waiting:
-                    return Text('Loading....');
-                  default:
-                    return Text('Result: ${snapshot.data[0].id}');
-                  /*if (snapshot.hasError) {
-                      print('Error: ${snapshot.error}');
-                      return Text('Error: ${snapshot.error}');
-                    } else {
-                      
-                    }*/
-                }
-              },
+            height: 300.0,
+            child: Center(
+              child: (arrayVuelos.length != 0)
+                  ? ListCard(arrayVuelos)
+                  : CircularProgressIndicator(),
             ),
             decoration: BoxDecoration(
               color: Color(0xFF649166),
@@ -202,28 +247,20 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Future<List<ViewVuelo>> findVuelos() async {
+  Future findVuelos() async {
     ViewVuelo vuelo;
-    List<ViewVuelo> arrayViewVuelos;
 
     final response =
         await http.get(Uri.parse('http://localhost:8080/api/vuelo'));
 
     var data = json.decode(response.body);
 
-    if (response.statusCode == 200) {
-      print('${data[0]['id']}');
-    }
-
-    print('$data');
-
     for (var i in data) {
       vuelo = new ViewVuelo(i['id'], i['itinerario']['destino'], i['precio']);
-      print('${vuelo.destino}, ${vuelo.id}, ${vuelo.precio}');
-      arrayViewVuelos.add(vuelo);
+      arrayVuelos.add(vuelo);
     }
-    print('todo esta bien!');
-    return arrayViewVuelos;
+    setState(() {
+    });
   }
 
   void gestionarDetalleSilla() {
@@ -368,11 +405,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 CupertinoDialogAction(
                     onPressed: () {
                       setState(() {
-                        /**crear el metodo future
-                         * crear el objeto con todos los datos
-                         * usar el metodo
-                         * verificar que si quedó guardado
-                         */
                         Pasajero pasajero = new Pasajero(
                             txtCedula.text,
                             txtNombre.text,
@@ -441,29 +473,5 @@ class _MyHomePageState extends State<MyHomePage> {
     print('${data['id']}');
   }
 
-  /* crear card
-  Widget _card(String title, IconData icon, String price) => Container(
-      child: SizedBox(
-          height: 200,
-          width: 220,
-          child: Card(
-              elevation: 8,
-              child: Column(children: [
-                ListTile(title: Text('$title')),
-                Icon(icon, size: 50),
-                ListTile(title: Text('$price')),
-                ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  ObtenerDetalleSillaVuelo()));
-                    },
-                    child: Text("Comprar"))
-              ]))));
-*/
-/**
- */
+
 }
