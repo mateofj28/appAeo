@@ -21,9 +21,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'AirCol',
-      theme: ThemeData(
-        primaryColor: Color(0xFFFFCE2C)
-      ),
+      theme: ThemeData(primaryColor: Color(0xFFFFCE2C)),
       home: MyHomePage(title: 'Home'),
     );
   }
@@ -44,7 +42,11 @@ class _CardItemState extends State<CardItem> {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        print('${widget.vuelo.destino}');
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    ObtenerDetalleSillaVuelo(widget.vuelo.id)));
       },
       child: Container(
         width: 150.0,
@@ -103,7 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
   TextEditingController txtContrasena = new TextEditingController();
   List<ViewVuelo> arrayVuelos = [];
 
-  var nameUser  = '', mailUser = '';
+  var nameUser = '', mailUser = '';
 
   String _admin = "root";
   bool signRoot = false;
@@ -166,7 +168,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         Text("Hello $nameUser", style: TextStyle(fontSize: 20)),
                         Text('$mailUser'),
                         //ElevatedButton(onPressed: () {}, child: Text("presioname"))
-                  ])),
+                      ])),
               decoration: BoxDecoration(color: Color(0xFFFFCE2C))),
           if (signRoot == true)
             ListTile(
@@ -266,16 +268,7 @@ class _MyHomePageState extends State<MyHomePage> {
       vuelo = new ViewVuelo(i['id'], i['itinerario']['destino'], i['precio']);
       arrayVuelos.add(vuelo);
     }
-    setState(() {
-    });
-  }
-
-  void gestionarDetalleSilla() {
-    //Eliminar la actual
-    Navigator.pop(context);
-    //dirigirse a otra ventana
-    Navigator.push(context,
-        MaterialPageRoute(builder: (context) => ObtenerDetalleSillaVuelo()));
+    setState(() {});
   }
 
   Future<void> iniciarSesion() async {
@@ -439,7 +432,6 @@ class _MyHomePageState extends State<MyHomePage> {
   /** metodo traer el objeto*/
   Future getPasajero(
       TextEditingController correo, TextEditingController contrasena) async {
-
     var uri = 'http://localhost:8080/api/pasajero?correo=${correo.text}';
 
     final response = await http.get(Uri.parse(uri));
@@ -486,6 +478,4 @@ class _MyHomePageState extends State<MyHomePage> {
     var data = json.decode(response.body);
     print('${data['id']}');
   }
-
-
 }

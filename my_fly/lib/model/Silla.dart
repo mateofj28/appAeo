@@ -1,22 +1,15 @@
+import 'package:my_fly/model/ClaseSilla.dart';
+
 class Silla {
+  int _numero;
+  ClaseSilla _tipoSilla;
 
-  String numero;
-  String tipoSilla;
+  Silla(
+    this._numero,
+    this._tipoSilla,
+  );
 
-
-
-  vuelo(String numero, String tipoSilla,) {
-    this.numero = numero;
-    this.tipoSilla = tipoSilla;  
-  }
-
-  String getNumero() {
-    return this.numero;
-  }
-
-  String getTipoSilla() {
-    return this.tipoSilla;  
-  }
-
+  int get numero => _numero;
+  ClaseSilla get tipoSilla => _tipoSilla;
+  
 }
-
