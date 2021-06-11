@@ -174,7 +174,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ListTile(
                 title: Text("Gestionar itinerario"),
                 onTap: () {
-                  Navigator.pop(context);
                   Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -184,11 +183,11 @@ class _MyHomePageState extends State<MyHomePage> {
             ListTile(
                 title: Text("Gestionar vuelo"),
                 onTap: () {
-                  Navigator.pop(context);
                   Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => GestionarVuelo()));
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => GestionarVuelo()))
+                      .then((value) =>  findVuelos());
                 }),
           ListTile(
               title: Text("Gestionar mis datos"),
@@ -258,7 +257,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future findVuelos() async {
     ViewVuelo vuelo;
-
+    arrayVuelos = [];
     final response =
         await http.get(Uri.parse('http://localhost:8080/api/vuelo'));
 
@@ -268,6 +267,7 @@ class _MyHomePageState extends State<MyHomePage> {
       vuelo = new ViewVuelo(i['id'], i['itinerario']['destino'], i['precio']);
       arrayVuelos.add(vuelo);
     }
+
     setState(() {});
   }
 

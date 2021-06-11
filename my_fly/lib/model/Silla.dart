@@ -2,7 +2,7 @@ import 'package:my_fly/model/ClaseSilla.dart';
 
 class Silla {
   int _numero;
-  ClaseSilla _tipoSilla;
+  dynamic _tipoSilla;
 
   Silla(
     this._numero,

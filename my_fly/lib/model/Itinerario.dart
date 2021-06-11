@@ -80,4 +80,6 @@ class Itinerario {
   set origen(String value) {
     _origen = value;
   }
+
+  
 }

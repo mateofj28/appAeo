@@ -40,8 +40,8 @@ class BotonesState extends State<Botones> {
         });
   }
 
-  Color determinarColor(Pago pago) {
-    if (pago.valor == null) {
+  Color determinarColor(dynamic pago) {
+    if (pago == null) {
       return Colors.yellow;
     }
     return Colors.red;
@@ -81,8 +81,6 @@ class ObtenerDetalleSillaVueloState extends State<ObtenerDetalleSillaVuelo> {
   }
 
   Future getDetalleSillaAvion(int avion) async {
-    
-
     final response = await http
         .get(Uri.parse('http://localhost:8080/api/detalle?vuelo=$avion'));
 
@@ -99,7 +97,7 @@ class ObtenerDetalleSillaVueloState extends State<ObtenerDetalleSillaVuelo> {
           data['vuelo']['itinerario']['puertoDestino']['ciudad']['pais']
               ['nombre']);
 
-      print('paices bien!');
+      
 
       Ciudad ciudadOrigen = new Ciudad(
           data['vuelo']['itinerario']['puertoOrigen']['ciudad']['id'],
@@ -111,7 +109,7 @@ class ObtenerDetalleSillaVueloState extends State<ObtenerDetalleSillaVuelo> {
           data['vuelo']['itinerario']['puertoDestino']['ciudad']['nombre'],
           paisDestino);
 
-      print('ciudades bien!');
+      
 
       Aeropuerto puertoOrigen = new Aeropuerto(
           data['vuelo']['itinerario']['puertoOrigen']['id'],
@@ -123,7 +121,7 @@ class ObtenerDetalleSillaVueloState extends State<ObtenerDetalleSillaVuelo> {
           data['vuelo']['itinerario']['puertoDestino']['nombre'],
           ciudadDestino);
 
-      print('aeropuertos bien!');
+      
 
       Itinerario itinerario = new Itinerario(
           data['vuelo']['itinerario']['origen'],
@@ -135,32 +133,30 @@ class ObtenerDetalleSillaVueloState extends State<ObtenerDetalleSillaVuelo> {
           DateTime.parse(data['vuelo']['itinerario']['fechaLlegada']),
           data['vuelo']['itinerario']['horaLlegada']);
 
-      print('itinerario bien!');
+      
 
       Avion avion = new Avion(
           data['vuelo']['avion']['id'],
           data['vuelo']['avion']['numero'],
           data['vuelo']['avion']['aerolinias']);
 
-      print('aviones bien!');
+      
 
       Vuelo vuelo = new Vuelo(data['vuelo']['id'], avion, itinerario,
           data['vuelo']['finalizado'], data['vuelo']['precio']);
 
-      print('vuelos bien!');
+      
 
       ClaseSilla tipoSilla = new ClaseSilla(
           data['silla']['clase']['id'],
           data['silla']['clase']['precio'],
           data['silla']['clase']['tipoSilla']);
 
-      print('tipoSilla bien!');
+      
 
       Silla silla = new Silla(data['silla']['numero'], tipoSilla);
 
-      print('el valor fue : ${data['pago']}');
-      print('Silla bien!');
-
+      
       dynamic cliente = null;
 
       if (data['pago'] != null) {
@@ -171,11 +167,11 @@ class ObtenerDetalleSillaVueloState extends State<ObtenerDetalleSillaVuelo> {
             data['pago']['pasajero']['telefono'],
             data['pago']['pasajero']['correo'],
             data['pago']['pasajero']['password']);
-      } 
+      }
 
       dynamic pago = null;
 
-      if (data['pago']!= null) {
+      if (data['pago'] != null) {
         pago = new Pago.id(
             data['pago']['id'],
             data['pago']['codigoSegurida'],
@@ -186,14 +182,10 @@ class ObtenerDetalleSillaVueloState extends State<ObtenerDetalleSillaVuelo> {
             cliente);
       }
 
-      print('pago bien!');
-
       dynamic reserva = null;
       if (data['reserva'] != null) {
         reserva = new Reserva.id(data['reserva']['id'], cliente);
-      }
-      
-      print('reserva bien!');
+      }      
 
       DetalleSillaVuelo detalle = new DetalleSillaVuelo.id(data['id'],
           data['checking'], data['pasabordo'], pago, reserva, silla, vuelo);
@@ -201,8 +193,7 @@ class ObtenerDetalleSillaVueloState extends State<ObtenerDetalleSillaVuelo> {
       setState(() {
         arrayDetalle.add(detalle);
       });
-    }
-    print('todo el detalle bien!!');
+    }    
   }
 
   Future<void> showAlertDialog() async {

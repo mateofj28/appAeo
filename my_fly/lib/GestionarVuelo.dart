@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:my_fly/model/Aeropuerto.dart';
 import 'package:my_fly/model/Avion.dart';
 import 'package:my_fly/model/Ciudad.dart';
+import 'package:my_fly/model/ClaseSilla.dart';
+import 'package:my_fly/model/DetalleSillaVuelo.dart';
 import 'package:my_fly/model/Pais.dart';
 import 'dart:convert';
 
@@ -13,6 +15,7 @@ import 'package:my_fly/model/Vuelo.dart';
 import 'package:my_fly/view/ViewItinerario.dart';
 
 import 'model/Itinerario.dart';
+import 'model/Silla.dart';
 
 class GestionarVuelo extends StatefulWidget {
   @override
@@ -37,6 +40,32 @@ class _GestionarVueloState extends State<GestionarVuelo> {
   var precioValue = 'Seleccionar precio';
   Avion avion;
   Itinerario itinerario;
+  List<Silla> arraySillas = [];
+  var mensaje = "";
+  Vuelo newVuelo;
+
+  Future getSillas() async {
+    Silla silla;
+    ClaseSilla tipoSilla;
+
+    final response =
+        await http.get(Uri.parse('http://localhost:8080/api/silla'));
+
+    var data = json.decode(response.body);
+
+    print('datos sillas $data');
+
+    for (var i in data) {
+      tipoSilla = new ClaseSilla(
+          i['clase']['id'], i['clase']['precio'], i['clase']['tipoSilla']);
+
+      silla = new Silla(i['numero'], tipoSilla);
+      print('esta es la silla ${silla.numero}');
+      arraySillas.add(silla);
+    }
+
+    print('las sillas se crearon ${arraySillas.length}');
+  }
 
   Future getAviones() async {
     Avion avion;
@@ -82,13 +111,10 @@ class _GestionarVueloState extends State<GestionarVuelo> {
     super.initState();
     getItinerarios();
     getAviones();
+    getSillas();
   }
 
   Future guardarVuelo(Vuelo vuelo) async {
-    print(
-        'el vuelo se creo ${vuelo.itinerario.fechaSalida}, ${vuelo.precio}, ${vuelo.itinerario.id}, ${vuelo.avion.id}');
-    print('es malo?');
-
     final body = json.encode({
       "itinerario": {
         "id": vuelo.itinerario.id,
@@ -121,7 +147,8 @@ class _GestionarVueloState extends State<GestionarVuelo> {
             }
           }
         },
-        "fechaLlegada": DateFormat('y-MM-d').format(vuelo.itinerario.fechaLlegada),
+        "fechaLlegada":
+            DateFormat('y-MM-d').format(vuelo.itinerario.fechaLlegada),
         "horaLlegada": vuelo.itinerario.horaLlegada,
       },
       "avion": {
@@ -133,8 +160,6 @@ class _GestionarVueloState extends State<GestionarVuelo> {
       "precio": vuelo.precio
     });
 
-    print('el json paso $body');
-
     final response = await http.post(
         Uri.parse('http://localhost:8080/api/vuelo'),
         body: body,
@@ -142,9 +167,54 @@ class _GestionarVueloState extends State<GestionarVuelo> {
           'Content-Type': 'application/json',
         });
 
-    print('se mando la data ${response.statusCode}');
     var data = json.decode(response.body);
-    print('el vuelo fue: $data bien!!');
+
+    var paisSalida = new Pais(
+        data['itinerario']['puertoOrigen']['ciudad']['pais']['id'],
+        data['itinerario']['puertoOrigen']['ciudad']['pais']['nombre']);
+
+    var ciudadSalida = new Ciudad(
+        data['itinerario']['puertoOrigen']['ciudad']['id'],
+        data['itinerario']['puertoOrigen']['ciudad']['nombre'],
+        paisSalida);
+
+    Aeropuerto puertoSalida = new Aeropuerto(
+        data['itinerario']['puertoOrigen']['id'],
+        data['itinerario']['puertoOrigen']['nombre'],
+        ciudadSalida);
+
+    var paisLlegada = new Pais(
+        data['itinerario']['puertoDestino']['ciudad']['pais']['id'],
+        data['itinerario']['puertoDestino']['ciudad']['pais']['nombre']);
+
+    var ciudadLlegada = new Ciudad(
+        data['itinerario']['puertoDestino']['ciudad']['id'],
+        data['itinerario']['puertoDestino']['ciudad']['nombre'],
+        paisLlegada);
+
+    Aeropuerto puertoLlegada = new Aeropuerto(
+        data['itinerario']['puertoDestino']['id'],
+        data['itinerario']['puertoDestino']['nombre'],
+        ciudadLlegada);
+
+    itinerario = new Itinerario.id(
+        data['itinerario']['id'],
+        data['itinerario']['origen'],
+        puertoSalida,
+        DateTime.parse(data['itinerario']['fechaSalida']),
+        data['itinerario']['horaSalida'],
+        data['itinerario']['destino'],
+        puertoLlegada,
+        DateTime.parse(data['itinerario']['fechaLlegada']),
+        data['itinerario']['horaLlegada']);
+
+      Avion _avion = new Avion(
+        data['avion']['id'], 
+        data['avion']['numero'], 
+        data['avion']['aerolinias']);
+
+    newVuelo = new Vuelo(
+        data['id'], _avion, itinerario, data['finalizado'], data['precio']);
   }
 
   Future getDataItinerario(String id) async {
@@ -181,8 +251,6 @@ class _GestionarVueloState extends State<GestionarVuelo> {
         puertoLlegada,
         DateTime.parse(data['fechaLlegada']),
         data['horaLlegada']);
-
-    print("el itinerario se creo satisfactoriamente");
   }
 
   Future getDataAviones(String id) async {
@@ -192,7 +260,6 @@ class _GestionarVueloState extends State<GestionarVuelo> {
     var data = json.decode(response.body);
 
     avion = new Avion(data['id'], data['numero'], data['aerolinias']);
-    print('el avion se guardo');
   }
 
   @override
@@ -318,9 +385,14 @@ class _GestionarVueloState extends State<GestionarVuelo> {
                         setState(() {
                           Vuelo vuelo =
                               new Vuelo.id(avion, itinerario, null, precios);
-                          guardarVuelo(vuelo);
+                          procesarDetalle(vuelo);
+                          mensaje = 'En el home puedes ver el vuelo';
                         });
-                      })
+                      }),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Text('$mensaje')
                 ],
               ),
             )
@@ -415,18 +487,98 @@ class _GestionarVueloState extends State<GestionarVuelo> {
 
     precios = arrayPrecios[id];
   }
-}
+
+  Future guardarDetalle(DetalleSillaVuelo detalle) async {
+    final body = json.encode({      
+      "vuelo": {
+        "id": detalle.vuelo.id,
+        "itinerario": {
+          "id": detalle.vuelo.itinerario.id,
+          "origen": detalle.vuelo.itinerario.origen,
+          "puertoOrigen": {
+            "id": detalle.vuelo.itinerario.puertoOrigen.id,
+            "nombre": detalle.vuelo.itinerario.puertoOrigen.nombre,
+            "ciudad": {
+              "id": detalle.vuelo.itinerario.puertoOrigen.ciudad.id,
+              "nombre": detalle.vuelo.itinerario.puertoOrigen.ciudad.nombre,
+              "pais": {
+                "id": detalle.vuelo.itinerario.puertoOrigen.ciudad.pais.id,
+                "nombre":
+                    detalle.vuelo.itinerario.puertoOrigen.ciudad.pais.nombre
+              }
+            }
+          },
+          "fechaSalida":
+              DateFormat('y-MM-d').format(detalle.vuelo.itinerario.fechaSalida),
+          "horaSalida": detalle.vuelo.itinerario.horaSalida,
+          "destino": detalle.vuelo.itinerario.destino,
+          "puertoDestino": {
+            "id": detalle.vuelo.itinerario.puertoDestino.id,
+            "nombre": detalle.vuelo.itinerario.puertoDestino.nombre,
+            "ciudad": {
+              "id": detalle.vuelo.itinerario.puertoDestino.ciudad.id,
+              "nombre": detalle.vuelo.itinerario.puertoDestino.ciudad.nombre,
+              "pais": {
+                "id": detalle.vuelo.itinerario.puertoDestino.ciudad.pais.id,
+                "nombre":
+                    detalle.vuelo.itinerario.puertoDestino.ciudad.pais.nombre
+              }
+            }
+          },
+          "fechaLlegada": DateFormat('y-MM-d')
+              .format(detalle.vuelo.itinerario.fechaLlegada),
+          "horaLlegada": detalle.vuelo.itinerario.horaLlegada
+        },
+        "avion": {
+          "id": detalle.vuelo.avion.id,
+          "numero": detalle.vuelo.avion.numero,
+          "aerolinias": detalle.vuelo.avion.aerolinias
+        },
+        "finalizado": detalle.vuelo.finalizado,
+        "precio": detalle.vuelo.precio
+      },
+      "silla": {
+        "numero": detalle.silla.numero,
+        "clase": {
+          "id": detalle.silla.tipoSilla.id,
+          "tipoSilla": detalle.silla.tipoSilla.tipoSilla,
+          "precio": detalle.silla.tipoSilla.precio
+        }
+      },
+      "reserva": detalle.reserva,
+      "pago": detalle.pago,
+      "checking": detalle.checkIn,
+      "pasabordo": detalle.pasabordo
+    });
+
+    
+
+    final response = await http.post(
+        Uri.parse('http://localhost:8080/api/detalle'),
+        body: body,
+        headers: {
+          'Content-Type': 'application/json',
+        });
+
+    
+    var data = json.decode(response.body);
+    
+  }
+
+  Future procesarDetalle(Vuelo vuelo) async {
+    await guardarVuelo(vuelo);
+    for (int i = 0; i < arraySillas.length; i++) {
+      DetalleSillaVuelo detalle = new DetalleSillaVuelo(
+          false, false, null, null, arraySillas[i], newVuelo);
+
+      await guardarDetalle(detalle);
+    }
+  }
 /**
  * {
- * "itinerario"
- * 
- * 
- * 
- * 
- * 
- * 
- * }
+    
  * 
  * 
  * 
  */
+}

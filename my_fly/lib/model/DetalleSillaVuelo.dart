@@ -26,4 +26,5 @@ class DetalleSillaVuelo {
   Reserva get reserva => _reserva;
   Silla get silla => _silla;
   Vuelo get vuelo => _vuelo;
+  
 }
